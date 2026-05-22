@@ -476,10 +476,11 @@
             if (isCorrect) {
                 statusBox.innerText = "⭕ 정답입니다!";
                 statusBox.className = "result-title correct";
-                sendStudyRecord();
+                sendStudyRecord(currentQuiz.question, true);
             } else {
                 statusBox.innerText = "❌ 오답입니다!";
                 statusBox.className = "result-title wrong";
+                sendStudyRecord(currentQuiz.question, false);
             }
 
             document.getElementById('resultAnswerDisplay').innerText = currentQuiz.answer;
