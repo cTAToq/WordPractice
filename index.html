@@ -209,6 +209,26 @@
     </div>
         
 
+    <button
+    id="installBtn"
+    onclick="installApp()"
+    style="
+        display:none;
+        width:320px;
+        margin-bottom:15px;
+        padding:14px;
+        border:none;
+        border-radius:12px;
+        background:#28a745;
+        color:white;
+        font-size:16px;
+        font-weight:bold;
+        cursor:pointer;
+        box-shadow:0 4px 10px rgba(0,0,0,0.2);
+    "
+>
+📲 앱처럼 설치하기
+</button>
     <nav class="bottom-nav">
         <button class="nav-btn active" id="navWordBtn" onclick="switchTab('word')">✏️ 단어장</button>
         <button class="nav-btn" id="navRankBtn" onclick="switchTab('rank')">🏆 주간 랭킹</button>
@@ -223,6 +243,7 @@
         let currentIndex = 0;
         let isAnswerChecked = false;
         let userNickname = "";
+        let deferredPrompt = null;
 
         function switchTab(tab) {
             document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
@@ -779,6 +800,36 @@
         }
 
         window.onload = initApp;
+        window.addEventListener('beforeinstallprompt', (e) => {
+
+            e.preventDefault();
+        
+            deferredPrompt = e;
+        
+            document.getElementById('installBtn')
+                .style.display = 'block';
+        
+        });
+        async function installApp() {
+        
+            if(!deferredPrompt) return;
+        
+            deferredPrompt.prompt();
+        
+            const result =
+                await deferredPrompt.userChoice;
+        
+            if(result.outcome === 'accepted') {
+        
+                console.log('앱 설치 완료');
+        
+            }
+        
+            deferredPrompt = null;
+        
+            document.getElementById('installBtn')
+                .style.display = 'none';
+        }
     </script>
 </body>
 </html>
