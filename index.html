@@ -233,6 +233,16 @@
                 document.getElementById('navRankBtn').classList.add('active');
                 loadRankingData();
             }
+            else if(tab === 'stats') {
+
+                document.getElementById('statsSection')
+                    .classList.add('active');
+            
+                document.getElementById('navStatsBtn')
+                    .classList.add('active');
+            
+                loadMyStats();
+            }
         }
 
         function initTheme() {
