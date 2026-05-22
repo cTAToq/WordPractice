@@ -251,12 +251,30 @@
             document.getElementById('userInfoText').innerText = userNickname ? `👤 현재 사용자: ${userNickname}` : `👤 내 닉네임 설정`;
         }
 
-        async function sendStudyRecord() {
-            if(!scriptUrl.includes("macros/s/")) return; 
-            const payload = { nickname: userNickname || "익명" };
+        async function sendStudyRecord(question, isCorrect) {
+
+            if(!scriptUrl.includes("macros/s/")) return;
+        
+            const payload = {
+                nickname: userNickname || "익명",
+                question: question,
+                isCorrect: isCorrect,
+                timestamp: new Date().toISOString()
+            };
+        
             try {
-                fetch(scriptUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            } catch(e) { console.error("기록 전송 실패:", e); }
+                fetch(scriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+        
+            } catch(e) {
+                console.error("기록 전송 실패:", e);
+            }
         }
 
         async function initApp() {
