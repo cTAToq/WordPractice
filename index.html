@@ -396,19 +396,22 @@
             const currentQuiz = words[currentIndex];
             const statusBox = document.getElementById('resultStatus');
             
-            // 1. 유저 입력값에서 모든 공백(띄어쓰기, 줄바꿈 등) 제거
+            // 1. 유저 입력값에서 모든 공백 제거
             const cleanUserInput = userInput.replace(/\s+/g, '');
 
-            // 2. 정답 후보 목록 생성: 
-            // B열의 메인 정답 + D열의 유의어들을 모두 콤마로 분리하여 합침
+            // 2. 정답 후보 목록 생성 및 모든 공백 제거 (유의어 처리를 더 강력하게!)
             let allowedAnswers = [currentQuiz.answer];
             if (currentQuiz.similar) {
+                // 쉼표로 나누고, 각 항목의 앞뒤 공백을 확실하게 지움
                 const similarList = currentQuiz.similar.split(',').map(item => item.trim());
                 allowedAnswers = allowedAnswers.concat(similarList);
             }
 
-            // 3. 정답 목록(B열 + D열) 중 하나라도 공백 제거 상태에서 일치하면 정답!
-            const isCorrect = allowedAnswers.some(ans => ans.replace(/\s+/g, '') === cleanUserInput);
+            // 3. 정답 목록의 모든 항목에서 공백을 제거한 뒤 비교
+            const isCorrect = allowedAnswers.some(ans => {
+                const cleanAns = ans.replace(/\s+/g, '');
+                return cleanAns === cleanUserInput;
+            });
 
             if (isCorrect) {
                 statusBox.innerText = "⭕ 정답입니다!";
