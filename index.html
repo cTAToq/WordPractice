@@ -331,37 +331,43 @@
         }
 
         async function fetchSheetData(url) {
+
             let tempArray = [];
+        
             try {
+        
                 const response = await fetch(url);
-                const data = await response.text();
-                const rows = data.replace(/\r/g, '').split('\n');
-                
-                rows.slice(1).forEach(row => {
-                    const trimmedRow = row.trim();
-                    if(!trimmedRow) return;
-                    
-                    const parsed = Papa.parse(trimmedRow);
-                    const cells = parsed.data[0].map(cell => String(cell).trim());
-                    
-                    if(cells[0] && cells[0] !== "질문" && cells[0] !== "question" && cells[1]) {
-                        tempArray.push({ 
-                            question: cells[0], 
-                            answer: cells[1], 
-                            pronounce: cells[2] || "", 
-                            similar: cells[3] || "",
-                            type: (cells[4] || "주관식").trim(),
-                            c1: cells[5] || "",
-                            c2: cells[6] || "",
-                            c3: cells[7] || "",
-                            c4: cells[8] || ""
-                        });
-                    }
+                const csvText = await response.text();
+        
+                const parsed = Papa.parse(csvText.trim());
+        
+                const rows = parsed.data;
+        
+                rows.slice(1).forEach(cells => {
+        
+                    if (!cells || cells.length < 2) return;
+        
+                    tempArray.push({
+                        question: (cells[0] || "").trim(),
+                        answer: (cells[1] || "").trim(),
+                        pronounce: (cells[2] || "").trim(),
+                        similar: (cells[3] || "").trim(),
+                        type: (cells[4] || "주관식").trim(),
+                        c1: (cells[5] || "").trim(),
+                        c2: (cells[6] || "").trim(),
+                        c3: (cells[7] || "").trim(),
+                        c4: (cells[8] || "").trim()
+                    });
+        
                 });
+        
                 return tempArray;
-            } catch (e) { 
-                console.error(e); 
+        
+            } catch (e) {
+        
+                console.error(e);
                 return [];
+        
             }
         }
 
