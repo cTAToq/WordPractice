@@ -187,6 +187,7 @@
             document.getElementById('themeBtn').innerText = newTheme === 'dark' ? '☀️ 라이트모드' : '🌙 다크모드';
         }
 
+        // 유저 초기화 및 고유 키 보장
         function initUser() {
             userNickname = localStorage.getItem('study_nickname');
             if(!userNickname) {
@@ -279,36 +280,44 @@
                 }
             });
             
+            // 데이터가 아무것도 안 들어왔을 때의 예외 처리
+            if (singleBasket.length === 0) {
+                words = [];
+                document.getElementById('quizQuestion').innerText = "단어 없음";
+                return;
+            }
+
             words = singleBasket;
             
-            // 🎯 확실하게 정제된 최종 가득 찬 바구니를 대상으로 무작위 셔플 가동!
+            // 🎯 완벽하게 필터링된 순수 배열을 피셔-예이츠로 확실하게 폭파하듯 섞기!
             shuffleArray(words);
 
             if (words.length > 0) showQuestion();
             else document.getElementById('quizQuestion').innerText = "단어 없음";
         }
 
-        // 🛠️ 따옴표, 미세 공백(\r) 가공 로직 보강 버전
+        // 🛠️ 셔플 에러를 유발하는 쓰레기 더미 데이터를 완전히 필터링하는 파싱 함수로 개조
         async function fetchSheetData(url) {
             let tempArray = [];
             try {
                 const response = await fetch(url);
                 const data = await response.text();
                 
-                // 줄바꿈 단위를 유연하게 쪼갠 뒤 가공
-                const rows = data.split('\n');
+                // 캐리지 리턴(\r)을 완벽 제거한 뒤 한 줄씩 분할
+                const rows = data.replace(/\r/g, '').split('\n');
                 
                 rows.slice(1).forEach(row => {
-                    if(!row.trim()) return; // 완전 빈 행 건너뛰기
+                    const trimmedRow = row.trim();
+                    if(!trimmedRow) return; // 완전 빈 행 패스
                     
-                    // 콤마로 쪼갠 뒤 양 끝 따옴표 및 보이지 않는 공백(\r, 공백문자) 철저하게 청소
-                    const cells = row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim());
+                    // 따옴표 제거 및 모든 요소 공백 트림 처리
+                    const cells = trimmedRow.split(',').map(cell => cell.replace(/^"|"$/g, '').trim());
                     
-                    // 첫 번째 칸(질문)이 확실하게 존재하고 제목 행("질문" 등)이 아닌 정상 데이터만 선별
-                    if(cells[0] && cells[0] !== "질문" && cells[0] !== "question") {
+                    // 헤더 무시 및 첫 번째 칸(질문), 두 번째 칸(정답)이 정상적인 텍스트일 때만 삽입
+                    if(cells[0] && cells[0] !== "질문" && cells[0] !== "question" && cells[1]) {
                         tempArray.push({ 
                             question: cells[0], 
-                            answer: cells[1] || "", 
+                            answer: cells[1], 
                             pronounce: cells[2] || "", 
                             similar: cells[3] || "",
                             type: cells[4] || "주관식",
@@ -326,10 +335,14 @@
             }
         }
 
+        // 보장된 피셔-예이츠 무작위 셔플 알고리즘
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[array[j]]] = [array[array[j]], array[i]];
+                // 구조 분해 할당을 이용한 안전한 원소 스왑
+                const temp = array[i];
+                array[i] = array[j];
+                array[j] = temp;
             }
         }
 
@@ -429,7 +442,7 @@
                 const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=기록`;
                 const response = await fetch(url);
                 const data = await response.text();
-                const rows = data.split('\n').map(row => row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim()));
+                const rows = data.replace(/\r/g, '').split('\n').map(row => row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim()));
                 
                 let rankingList = [];
                 const now = new Date();
