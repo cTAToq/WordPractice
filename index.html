@@ -396,13 +396,17 @@
             const currentQuiz = words[currentIndex];
             const statusBox = document.getElementById('resultStatus');
             
+            // 공백을 모두 제거한 입력값 생성
+            const cleanUserInput = userInput.replace(/\s+/g, '');
+
             let allowedAnswers = [currentQuiz.answer];
             if (currentQuiz.similar) {
                 const similarList = currentQuiz.similar.split(',').map(item => item.trim());
                 allowedAnswers = allowedAnswers.concat(similarList);
             }
 
-            const isCorrect = allowedAnswers.includes(userInput);
+            // 🛠️ 비교할 때 모든 공백을 제거한 값끼리 비교 (공백/띄어쓰기 무시)
+            const isCorrect = allowedAnswers.some(ans => ans.replace(/\s+/g, '') === cleanUserInput);
 
             if (isCorrect) {
                 statusBox.innerText = "⭕ 정답입니다!";
