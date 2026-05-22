@@ -429,6 +429,7 @@
         }
 
         function checkAnswer(userInput) {
+            if (isAnswerChecked) return;
             if (words.length === 0) return;
 
             const currentQuiz = words[currentIndex];
