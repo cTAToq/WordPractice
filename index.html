@@ -55,7 +55,6 @@
         .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 16px; cursor: pointer; width: 100%; color: var(--text-main); }
         .user-info-display { font-size: 14px; color: var(--text-sub); margin-bottom: 8px; font-weight: bold; }
 
-        /* 3D 카드 디자인 (객관식 문항 수용을 위해 세로 길이를 300px로 여유롭게 확장) */
         .card-wrapper { width: 320px; height: 320px; perspective: 1000px; margin-bottom: 20px; }
         .card-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .card-inner.flipped { transform: rotateY(180deg); }
@@ -65,12 +64,10 @@
         }
         .card-back { transform: rotateY(180deg); }
 
-        /* 문법 문제용 글자 크기 최적화 (문장이 길 경우 대비) */
         .question-text { font-size: 32px; font-weight: bold; color: var(--text-main); margin-bottom: 15px; min-height: 80px; display: flex; align-items: center; justify-content: center; text-align: center; word-break: keep-all; }
         .answer-input { width: 100%; padding: 12px; font-size: 18px; border: 2px solid var(--border-color); background: var(--card-bg); color: var(--text-main); border-radius: 8px; box-sizing: border-box; text-align: center; outline: none; }
         .answer-input:focus { border-color: #007bff; }
         
-        /* [기능 6] 객관식 보기 버튼 스타일 */
         .choice-group { display: none; flex-direction: column; gap: 8px; width: 100%; }
         .choice-btn { width: 100%; padding: 10px; font-size: 16px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-main); border-radius: 8px; cursor: pointer; text-align: left; font-weight: bold; transition: background 0.2s; }
         .choice-btn:hover { background: rgba(0, 123, 255, 0.1); border-color: #007bff; }
@@ -112,9 +109,7 @@
             <div class="card-inner" id="cardInner">
                 <div class="card-front">
                     <div class="question-text" id="quizQuestion">진도를 선택해 주세요</div>
-                    
                     <input type="text" class="answer-input" id="userAnswer" placeholder="정답을 입력하세요" onkeypress="handleKeyPress(event)">
-                    
                     <div class="choice-group" id="choiceGroup">
                         <button class="choice-btn" onclick="selectChoice(1)" id="c1">1. </button>
                         <button class="choice-btn" onclick="selectChoice(2)" id="c2">2. </button>
@@ -255,7 +250,6 @@
             }
         }
 
-        // 🎯 [기능 2 완벽 해결] 모든 비동기 데이터를 거대한 하나의 바구니에 다 쓸어 담고 완벽 셔플
         async function loadSelectedSheets() {
             const checkboxes = document.querySelectorAll('.lesson-check');
             let fetchPromises = [];
@@ -276,11 +270,8 @@
             }
             
             document.getElementById('quizQuestion').innerText = "로딩 중...";
-            
-            // 모든 시트 데이터를 완벽히 가져올 때까지 철저하게 기다림
             const results = await Promise.all(fetchPromises);
             
-            // 거대한 단일 완전 통합 배열 생성
             let singleBasket = [];
             results.forEach(arr => {
                 if(arr && arr.length > 0) {
@@ -288,33 +279,43 @@
                 }
             });
             
-            // 최종 합체 바구니를 통째로 뒤흔들기! (히라가나/카타카나 국경 붕괴)
             words = singleBasket;
+            
+            // 🎯 확실하게 정제된 최종 가득 찬 바구니를 대상으로 무작위 셔플 가동!
             shuffleArray(words);
 
             if (words.length > 0) showQuestion();
             else document.getElementById('quizQuestion').innerText = "단어 없음";
         }
 
+        // 🛠️ 따옴표, 미세 공백(\r) 가공 로직 보강 버전
         async function fetchSheetData(url) {
             let tempArray = [];
             try {
                 const response = await fetch(url);
                 const data = await response.text();
-                const rows = data.split('\n').map(row => row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim()));
+                
+                // 줄바꿈 단위를 유연하게 쪼갠 뒤 가공
+                const rows = data.split('\n');
+                
                 rows.slice(1).forEach(row => {
-                    if(row[0]) {
-                        // [기능 6 반영] 유형(E열) 및 보기들(F~I열) 유연하게 매핑 처리
+                    if(!row.trim()) return; // 완전 빈 행 건너뛰기
+                    
+                    // 콤마로 쪼갠 뒤 양 끝 따옴표 및 보이지 않는 공백(\r, 공백문자) 철저하게 청소
+                    const cells = row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim());
+                    
+                    // 첫 번째 칸(질문)이 확실하게 존재하고 제목 행("질문" 등)이 아닌 정상 데이터만 선별
+                    if(cells[0] && cells[0] !== "질문" && cells[0] !== "question") {
                         tempArray.push({ 
-                            question: row[0], 
-                            answer: row[1], 
-                            pronounce: row[2], 
-                            similar: row[3] || "",
-                            type: row[4] || "주관식",
-                            c1: row[5] || "",
-                            c2: row[6] || "",
-                            c3: row[7] || "",
-                            c4: row[8] || ""
+                            question: cells[0], 
+                            answer: cells[1] || "", 
+                            pronounce: cells[2] || "", 
+                            similar: cells[3] || "",
+                            type: cells[4] || "주관식",
+                            c1: cells[5] || "",
+                            c2: cells[6] || "",
+                            c3: cells[7] || "",
+                            c4: cells[8] || ""
                         });
                     }
                 });
@@ -332,13 +333,10 @@
             }
         }
 
-        // [기능 6] 문제 유형에 따라 폼을 스위칭하여 보여주는 함수
         function showQuestion() {
             if(words.length === 0) return;
             
             const currentQuiz = words[currentIndex];
-            
-            // 문제 텍스트 제어 (긴 문법 문장을 고려하여 폰트 크기 자동 조절)
             const qTextElem = document.getElementById('quizQuestion');
             qTextElem.innerText = currentQuiz.question;
             qTextElem.style.fontSize = currentQuiz.question.length > 8 ? "24px" : "48px";
@@ -347,16 +345,14 @@
             const choiceElem = document.getElementById('choiceGroup');
 
             if (currentQuiz.type === "객관식") {
-                // 객관식일 때 UI 세팅
                 inputElem.style.display = "none";
                 choiceElem.style.display = "flex";
                 document.getElementById('c1').innerText = `1. ${currentQuiz.c1}`;
                 document.getElementById('c2').innerText = `2. ${currentQuiz.c2}`;
                 document.getElementById('c3').innerText = `3. ${currentQuiz.c3}`;
                 document.getElementById('c4').innerText = `4. ${currentQuiz.c4}`;
-                document.getElementById('btnAction').style.display = "none"; // 객관식은 보기를 누르면 바로 채점되므로 메인 확인버튼 숨김
+                document.getElementById('btnAction').style.display = "none";
             } else {
-                // 주관식일 때 UI 세팅
                 choiceElem.style.display = "none";
                 inputElem.style.display = "block";
                 document.getElementById('btnAction').style.display = "block";
@@ -369,11 +365,10 @@
             else { checkAnswer(document.getElementById('userAnswer').value.trim()); }
         }
 
-        // 객관식 보기 클릭 이벤트 핸들러
         function selectChoice(num) {
             if (isAnswerChecked) return;
             const currentQuiz = words[currentIndex];
-            const selectedText = currentQuiz["c" + num]; // 클릭한 보기의 텍스트 추출
+            const selectedText = currentQuiz["c" + num];
             checkAnswer(selectedText);
         }
 
@@ -406,7 +401,6 @@
             document.getElementById('cardInner').classList.add('flipped');
             isAnswerChecked = true;
             
-            // 객관식 채점 완료 후 다시 [다음 단어]로 넘어갈 메인 버튼 복귀 시킴
             document.getElementById('btnAction').style.display = "block";
             document.getElementById('btnAction').innerText = "다음 단어 ➔";
         }
