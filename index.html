@@ -114,20 +114,22 @@
         }
 
         function checkAnswer(userInput) {
-            const q = words[currentIndex];
-            const cleanInput = userInput.replace(/\s+/g, '').toLowerCase();
-            let answers = [q.a];
-            if (q.sim) answers = answers.concat(q.sim.split(','));
+            const currentQuiz = words[currentIndex];
+            // 사용자가 입력한 값에서 공백 제거
+            const cleanUserInput = userInput.replace(/\s+/g, '');
+    
+            // D열 데이터(currentQuiz.d_column)를 쉼표로 분리하여 배열로 만듦
+            // 예: "나, 저" -> ["나", "저"]
+            const answerOptions = currentQuiz.d_column.split(',').map(item => item.trim());
+    
+            // 사용자가 입력한 값이 정답 배열 중 하나라도 포함되는지 확인
+            const isCorrect = answerOptions.some(ans => ans.replace(/\s+/g, '') === cleanUserInput);
 
-            const isCorrect = answers.some(ans => ans.replace(/\s+/g, '').toLowerCase() === cleanInput);
-
-            document.getElementById('resultStatus').innerText = isCorrect ? "⭕ 정답입니다!" : "❌ 오답입니다!";
-            document.getElementById('resultStatus').className = isCorrect ? "correct" : "wrong";
-            document.getElementById('resultAnswerDisplay').innerText = q.a;
-            document.getElementById('resultPronounceDisplay').innerText = `[${q.p}]`;
-            document.getElementById('cardInner').classList.add('flipped');
-            isAnswerChecked = true;
-            document.getElementById('btnAction').innerText = "다음 단어 ➔";
+            if (isCorrect) {
+                // 정답 처리 로직
+            } else {
+                // 오답 처리 로직
+            }
         }
 
         function handleMainButton() {
