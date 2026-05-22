@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가타카나 주관식 퀴즈</title>
+    <style>
+        body { font-family: sans-serif; background: #f8f9fa; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        
+        /* 옵션 구역 (상단 진도 선택) */
+        .options-container { background: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; width: 320px; box-sizing: border-box; text-align: center; }
+        .checkbox-group { display: flex; justify-content: space-around; margin-top: 10px; }
+        .btn-load { background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; margin-top: 10px; font-weight: bold; }
+
+        /* 퀴즈 박스 UI */
+        .quiz-container { background: white; width: 320px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 25px; box-sizing: border-box; text-align: center; margin-bottom: 20px; }
+        
+        /* A행 표시 (문제) */
+        .question-text { font-size: 56px; font-weight: bold; color: #212529; margin-bottom: 20px; min-height: 80px; display: flex; align-items: center; justify-content: center; }
+        
+        /* 입력창 */
+        .answer-input { width: 100%; padding: 12px; font-size: 18px; border: 2px solid #ced4da; border-radius: 8px; box-sizing: border-box; text-align: center; margin-bottom: 15px; outline: none; }
+        .answer-input:focus { border-color: #007bff; }
+        
+        /* 결과 화면 구역 (확인 누르면 나타남) */
+        .result-area { display: none; margin-top: 15px; padding: 15px; border-radius: 8px; font-size: 20px; font-weight: bold; }
+        .result-area.correct { display: block; background: #d4edda; color: #155724; }
+        .result-area.wrong { display: block; background: #f8d7da; color: #721c24; }
+        
+        /* 결과 노출 포맷: B행 [C행] */
+        .final-display { font-size: 24px; font-weight: bold; color: #333; margin-top: 8px; }
+
+        /* 메인 버튼 */
+        .btn-main { width: 320px; padding: 14px; font-size: 18px; border-radius: 8px; border: none; background: #007bff; color: white; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        .btn-main:active { opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+    <div class="options-container">
+        <div style="font-weight: bold; color: #495057;">📖 학습할 진도 선택</div>
+        <div class="checkbox-group">
+            <label style="cursor:pointer;"><input type="checkbox" class="lesson-check" value="lesson1" checked> 가타카나 50음도</label>
+        </div>
+        <button class="btn-load" onclick="loadSelectedSheets()">단어장 갱신하기</button>
+    </div>
+
+    <div class="quiz-container">
+        <div class="question-text" id="quizQuestion">로딩 중...</div>
+        
+        <input type="text" class="answer-input" id="userAnswer" placeholder="정답을 입력하세요" onkeypress="handleKeyPress(event)">
+        
+        <div class="result-area" id="resultBox">
+            <div id="resultStatus"></div>
+            <div class="final-display" id="resultAnswerDisplay"></div>
+        </div>
+    </div>
+
+    <button class="btn-main" id="btnAction" onclick="checkAnswer()">확인</button>
+
+    <script>
+        // ⚠️ 중요: 구글 시트에서 [웹에 게시] 한 CSV 링크를 여기에 붙여넣으세요!
+        // 현재는 예시 주소이므로 본인의 쉼표로 구분된 값(.csv) 주소로 변경하셔야 합니다.
+        const sheetUrls = {
+            lesson1: "https://docs.google.com/spreadsheets/d/1P-EpIcEFuGvFO7kLzE4RuzZy4NxHuofPArlszI6VT2s/edit?usp=sharing"
+        };
+        
+        let words = [];
+        let currentIndex = 0;
+        let isAnswerChecked = false; 
+
+        // 선택된 시트 데이터를 가져와 결합하는 함수
+        async function loadSelectedSheets() {
+            const checkboxes = document.querySelectorAll('.lesson-check');
+            let fetchPromises = [];
+            words = [];
+            currentIndex = 0;
+            resetUI();
+
+            checkboxes.forEach(cb => {
+                if (cb.checked) {
+                    const url = sheetUrls[cb.value];
+                    if(url) fetchPromises.push(fetchSheetData(url));
+                }
+            });
+
+            if (fetchPromises.length === 0) { alert("진도를 최소 하나 선택해주세요!"); return; }
+
+            document.getElementById('quizQuestion').innerText = "로딩 중...";
+            await Promise.all(fetchPromises);
+            shuffleArray(words); // 무작위 셔플
+
+            if (words.length > 0) { showQuestion(); } 
+            else { document.getElementById('quizQuestion').innerText = "단어 없음"; }
+        }
+
+        // 구글 시트 다운로드 및 파싱
+        async function fetchSheetData(url) {
+            try {
+                const response = await fetch(url);
+                const data = await response.text();
+                // 줄바꿈으로 나누고 쉼표로 열 분리
+                const rows = data.split('\n').map(row => row.split(','));
+                
+                // 1행(헤더) 제외하고 데이터 담기
+                rows.slice(1).forEach(row => {
+                    if(row[0]?.trim()) {
+                        words.push({
+                            question: row[0]?.trim(), // A열 (문제)
+                            answer: row[1]?.trim(),   // B열 (정답)
+                            pronounce: row[2]?.trim(),// C열 (발음)
+                            similar: row[3]?.trim()   // D열 (유사 정답 튜플)
+                        });
+                    }
+                });
+            } catch (e) { 
+                console.error("데이터 로드 에러:", e); 
+            }
+        }
+
+        // 배열 무작위 섞기 알고리즘
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[array[j]]] = [array[array[j]], array[i]];
+            }
+        }
+
+        // 문제 보여주기
+        function showQuestion() {
+            document.getElementById('quizQuestion').innerText = words[currentIndex].question;
+        }
+
+        // 채점 시스템 (B열 검증 및 D열 쉼표 분리 검증)
+        function checkAnswer() {
+            if (words.length === 0) return;
+
+            // 이미 채점된 상태에서 버튼을 또 누르면 다음 문제로 이동
+            if (isAnswerChecked) {
+                nextQuestion();
+                return;
+            }
+
+            const currentQuiz = words[currentIndex];
+            const userInput = document.getElementById('userAnswer').value.trim();
+            const resultBox = document.getElementById('resultBox');
+            
+            // 정답 후보 바구니 생성 (기본 정답 포함)
+            let allowedAnswers = [currentQuiz.answer];
+            
+            // D열 유사 정답이 있다면 쉼표(,)로 쪼개서 정답 바구니에 다 집어넣음
+            if (currentQuiz.similar) {
+                const similarList = currentQuiz.similar.split(',').map(item => item.trim());
+                allowedAnswers = allowedAnswers.concat(similarList);
+            }
+
+            // 유저가 입력한 값이 바구니에 있는지 대조
+            const isCorrect = allowedAnswers.includes(userInput);
+
+            // 결과 화면 피드백 노출
+            if (isCorrect) {
+                resultBox.className = "result-area correct";
+                document.getElementById('resultStatus').innerText = "⭕ 정답입니다!";
+            } else {
+                resultBox.className = "result-area wrong";
+                document.getElementById('resultStatus').innerText = "❌ 오답입니다!";
+            }
+
+            // 요구사항 반영: B열 [C열] 포맷 노출
+            document.getElementById('resultAnswerDisplay').innerText = 
+                `${currentQuiz.answer} [${currentQuiz.pronounce}]`;
+
+            isAnswerChecked = true;
+            document.getElementById('btnAction').innerText = "다음 단어 ➔";
+        }
+
+        // 다음 문제로 리셋 후 이동
+        function nextQuestion() {
+            currentIndex = (currentIndex + 1) % words.length;
+            resetUI();
+            showQuestion();
+        }
+
+        // UI 초기화
+        function resetUI() {
+            isAnswerChecked = false;
+            document.getElementById('userAnswer').value = "";
+            document.getElementById('resultBox').className = "result-area";
+            document.getElementById('btnAction').innerText = "확인";
+        }
+
+        // 엔터키 입력 편의 기능
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                checkAnswer();
+            }
+        }
+
+        // 페이지가 열리면 자동으로 시작
+        window.onload = loadSelectedSheets;
+    </script>
+</body>
+</html>
