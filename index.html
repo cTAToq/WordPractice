@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>일본어 학습 앱 - Step 3 (랭킹 포함)</title>
+    <title>일본어 마스터 앱 - Final Step</title>
     <style>
         :root {
             --bg-color: #f8f9fa;
@@ -36,17 +36,13 @@
             padding: 8px 12px; border-radius: 20px; cursor: pointer; font-weight: bold; color: var(--text-main); box-shadow: 0 2px 5px var(--shadow);
         }
 
-        /* 하단 탭 메뉴 바 */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: var(--card-bg);
             display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--border-color); box-shadow: 0 -2px 10px var(--shadow); z-index: 1000;
         }
-        .nav-btn {
-            background: none; border: none; color: var(--text-sub); font-size: 16px; font-weight: bold; cursor: pointer; width: 50%; height: 100%; transition: all 0.2s;
-        }
+        .nav-btn { background: none; border: none; color: var(--text-sub); font-size: 16px; font-weight: bold; cursor: pointer; width: 50%; height: 100%; transition: all 0.2s; }
         .nav-btn.active { color: #007bff; background: rgba(0, 123, 255, 0.05); }
 
-        /* 화면 섹션 제어 */
         .app-section { display: none; flex-direction: column; align-items: center; width: 100%; }
         .app-section.active { display: flex; }
 
@@ -59,35 +55,40 @@
         .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 16px; cursor: pointer; width: 100%; color: var(--text-main); }
         .user-info-display { font-size: 14px; color: var(--text-sub); margin-bottom: 8px; font-weight: bold; }
 
-        /* 3D 카드 애니메이션 구조 */
-        .card-wrapper { width: 320px; height: 260px; perspective: 1000px; margin-bottom: 20px; }
+        /* 3D 카드 디자인 (객관식 문항 수용을 위해 세로 길이를 300px로 여유롭게 확장) */
+        .card-wrapper { width: 320px; height: 320px; perspective: 1000px; margin-bottom: 20px; }
         .card-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .card-inner.flipped { transform: rotateY(180deg); }
         .card-front, .card-back {
             position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 16px; 
-            box-shadow: 0 4px 15px var(--shadow-lg); padding: 25px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--card-bg);
+            box-shadow: 0 4px 15px var(--shadow-lg); padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--card-bg);
         }
         .card-back { transform: rotateY(180deg); }
 
-        .question-text { font-size: 56px; font-weight: bold; color: var(--text-main); margin-bottom: 15px; min-height: 80px; display: flex; align-items: center; justify-content: center; }
+        /* 문법 문제용 글자 크기 최적화 (문장이 길 경우 대비) */
+        .question-text { font-size: 32px; font-weight: bold; color: var(--text-main); margin-bottom: 15px; min-height: 80px; display: flex; align-items: center; justify-content: center; text-align: center; word-break: keep-all; }
         .answer-input { width: 100%; padding: 12px; font-size: 18px; border: 2px solid var(--border-color); background: var(--card-bg); color: var(--text-main); border-radius: 8px; box-sizing: border-box; text-align: center; outline: none; }
         .answer-input:focus { border-color: #007bff; }
         
+        /* [기능 6] 객관식 보기 버튼 스타일 */
+        .choice-group { display: none; flex-direction: column; gap: 8px; width: 100%; }
+        .choice-btn { width: 100%; padding: 10px; font-size: 16px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-main); border-radius: 8px; cursor: pointer; text-align: left; font-weight: bold; transition: background 0.2s; }
+        .choice-btn:hover { background: rgba(0, 123, 255, 0.1); border-color: #007bff; }
+
         .result-title { font-size: 26px; font-weight: bold; margin-bottom: 10px; }
         .result-title.correct { color: #28a745; }
         .result-title.wrong { color: #dc3545; }
-        .final-display { font-size: 28px; font-weight: bold; color: var(--text-main); margin-top: 5px; }
-        .pronounce-display { font-size: 18px; color: var(--text-sub); margin-top: 5px; }
+        .final-display { font-size: 28px; font-weight: bold; color: var(--text-main); margin-top: 5px; text-align: center; }
+        .pronounce-display { font-size: 18px; color: var(--text-sub); margin-top: 5px; text-align: center; }
 
         .btn-main { width: 320px; padding: 14px; font-size: 18px; border-radius: 8px; border: none; background: #007bff; color: white; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
 
-        /* 랭킹 스타일 보드 */
         .rank-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 15px; }
         .rank-table th, .rank-table td { padding: 10px 5px; border-bottom: 1px solid var(--border-color); text-align: center; }
         .rank-table th { color: var(--text-sub); font-weight: bold; }
-        .rank-row-1 { font-weight: bold; color: #ffd700; } /* 1등 금색 */
-        .rank-row-2 { font-weight: bold; color: #c0c0c0; } /* 2등 은색 */
-        .rank-row-3 { font-weight: bold; color: #cd7f32; } /* 3등 동색 */
+        .rank-row-1 { font-weight: bold; color: #ffd700; }
+        .rank-row-2 { font-weight: bold; color: #c0c0c0; }
+        .rank-row-3 { font-weight: bold; color: #cd7f32; }
     </style>
 </head>
 <body>
@@ -111,7 +112,15 @@
             <div class="card-inner" id="cardInner">
                 <div class="card-front">
                     <div class="question-text" id="quizQuestion">진도를 선택해 주세요</div>
+                    
                     <input type="text" class="answer-input" id="userAnswer" placeholder="정답을 입력하세요" onkeypress="handleKeyPress(event)">
+                    
+                    <div class="choice-group" id="choiceGroup">
+                        <button class="choice-btn" onclick="selectChoice(1)" id="c1">1. </button>
+                        <button class="choice-btn" onclick="selectChoice(2)" id="c2">2. </button>
+                        <button class="choice-btn" onclick="selectChoice(3)" id="c3">3. </button>
+                        <button class="choice-btn" onclick="selectChoice(4)" id="c4">4. </button>
+                    </div>
                 </div>
                 <div class="card-back" id="resultBox">
                     <div class="result-title" id="resultStatus">⭕ 정답입니다!</div>
@@ -127,7 +136,6 @@
         <div class="ranking-container">
             <div style="font-weight: bold; font-size: 18px; color: #007bff; margin-bottom: 5px;">🏆 실시간 주간 랭킹</div>
             <div style="font-size: 12px; color: var(--text-sub); margin-bottom: 10px;">최근 7일간 정답을 맞힌 횟수 누적 기준</div>
-            
             <table class="rank-table">
                 <thead>
                     <tr>
@@ -157,18 +165,16 @@
         let isAnswerChecked = false;
         let userNickname = "";
 
-        // 탭 전환 제어 함수
         function switchTab(tab) {
             document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            
             if(tab === 'word') {
                 document.getElementById('wordSection').classList.add('active');
                 document.getElementById('navWordBtn').classList.add('active');
             } else if(tab === 'rank') {
                 document.getElementById('rankSection').classList.add('active');
                 document.getElementById('navRankBtn').classList.add('active');
-                loadRankingData(); // 랭킹 탭을 누를 때마다 실시간으로 데이터를 긁어옴
+                loadRankingData();
             }
         }
 
@@ -249,7 +255,7 @@
             }
         }
 
-        // [기능 1 & 2 튜닝] 완전히 값을 수집하여 보장된 상태로 처리하는 리로드 함수
+        // 🎯 [기능 2 완벽 해결] 모든 비동기 데이터를 거대한 하나의 바구니에 다 쓸어 담고 완벽 셔플
         async function loadSelectedSheets() {
             const checkboxes = document.querySelectorAll('.lesson-check');
             let fetchPromises = [];
@@ -271,20 +277,25 @@
             
             document.getElementById('quizQuestion').innerText = "로딩 중...";
             
-            // 시트들로부터 리턴된 서브 단어 배열들을 완전히 병합 처리
+            // 모든 시트 데이터를 완벽히 가져올 때까지 철저하게 기다림
             const results = await Promise.all(fetchPromises);
-            let combinedWords = [];
-            results.forEach(arr => { if(arr) combinedWords = combinedWords.concat(arr); });
             
-            // 🎯 비동기가 완전히 끝난 완결된 단어 리스트를 전역에 넣고 '직후에 셔플'을 확실하게 실행!
-            words = combinedWords;
+            // 거대한 단일 완전 통합 배열 생성
+            let singleBasket = [];
+            results.forEach(arr => {
+                if(arr && arr.length > 0) {
+                    singleBasket = singleBasket.concat(arr);
+                }
+            });
+            
+            // 최종 합체 바구니를 통째로 뒤흔들기! (히라가나/카타카나 국경 붕괴)
+            words = singleBasket;
             shuffleArray(words);
 
             if (words.length > 0) showQuestion();
             else document.getElementById('quizQuestion').innerText = "단어 없음";
         }
 
-        // 개별 시트에서 긁어와 임시 가공용 배열을 던져주는 순수 함수 형태로 전환
         async function fetchSheetData(url) {
             let tempArray = [];
             try {
@@ -293,7 +304,18 @@
                 const rows = data.split('\n').map(row => row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim()));
                 rows.slice(1).forEach(row => {
                     if(row[0]) {
-                        tempArray.push({ question: row[0], answer: row[1], pronounce: row[2], similar: row[3] || "" });
+                        // [기능 6 반영] 유형(E열) 및 보기들(F~I열) 유연하게 매핑 처리
+                        tempArray.push({ 
+                            question: row[0], 
+                            answer: row[1], 
+                            pronounce: row[2], 
+                            similar: row[3] || "",
+                            type: row[4] || "주관식",
+                            c1: row[5] || "",
+                            c2: row[6] || "",
+                            c3: row[7] || "",
+                            c4: row[8] || ""
+                        });
                     }
                 });
                 return tempArray;
@@ -310,20 +332,55 @@
             }
         }
 
+        // [기능 6] 문제 유형에 따라 폼을 스위칭하여 보여주는 함수
         function showQuestion() {
-            if(words.length > 0) document.getElementById('quizQuestion').innerText = words[currentIndex].question;
+            if(words.length === 0) return;
+            
+            const currentQuiz = words[currentIndex];
+            
+            // 문제 텍스트 제어 (긴 문법 문장을 고려하여 폰트 크기 자동 조절)
+            const qTextElem = document.getElementById('quizQuestion');
+            qTextElem.innerText = currentQuiz.question;
+            qTextElem.style.fontSize = currentQuiz.question.length > 8 ? "24px" : "48px";
+
+            const inputElem = document.getElementById('userAnswer');
+            const choiceElem = document.getElementById('choiceGroup');
+
+            if (currentQuiz.type === "객관식") {
+                // 객관식일 때 UI 세팅
+                inputElem.style.display = "none";
+                choiceElem.style.display = "flex";
+                document.getElementById('c1').innerText = `1. ${currentQuiz.c1}`;
+                document.getElementById('c2').innerText = `2. ${currentQuiz.c2}`;
+                document.getElementById('c3').innerText = `3. ${currentQuiz.c3}`;
+                document.getElementById('c4').innerText = `4. ${currentQuiz.c4}`;
+                document.getElementById('btnAction').style.display = "none"; // 객관식은 보기를 누르면 바로 채점되므로 메인 확인버튼 숨김
+            } else {
+                // 주관식일 때 UI 세팅
+                choiceElem.style.display = "none";
+                inputElem.style.display = "block";
+                document.getElementById('btnAction').style.display = "block";
+                inputElem.focus();
+            }
         }
 
         function handleMainButton() {
             if (isAnswerChecked) { nextQuestion(); } 
-            else { checkAnswer(); }
+            else { checkAnswer(document.getElementById('userAnswer').value.trim()); }
         }
 
-        function checkAnswer() {
+        // 객관식 보기 클릭 이벤트 핸들러
+        function selectChoice(num) {
+            if (isAnswerChecked) return;
+            const currentQuiz = words[currentIndex];
+            const selectedText = currentQuiz["c" + num]; // 클릭한 보기의 텍스트 추출
+            checkAnswer(selectedText);
+        }
+
+        function checkAnswer(userInput) {
             if (words.length === 0) return;
 
             const currentQuiz = words[currentIndex];
-            const userInput = document.getElementById('userAnswer').value.trim();
             const statusBox = document.getElementById('resultStatus');
             
             let allowedAnswers = [currentQuiz.answer];
@@ -348,6 +405,9 @@
             
             document.getElementById('cardInner').classList.add('flipped');
             isAnswerChecked = true;
+            
+            // 객관식 채점 완료 후 다시 [다음 단어]로 넘어갈 메인 버튼 복귀 시킴
+            document.getElementById('btnAction').style.display = "block";
             document.getElementById('btnAction').innerText = "다음 단어 ➔";
         }
 
@@ -368,63 +428,45 @@
             document.getElementById('btnAction').innerText = "확인";
         }
 
-        // [기능 5] 구글 시트에서 기록 탭 데이터를 직접 긁어와 주간(7일 이내) 랭킹 산출
         async function loadRankingData() {
             const tableBody = document.getElementById('rankTableBody');
             tableBody.innerHTML = `<tr><td colspan="3" style="color:#888;">데이터 집계 중...</td></tr>`;
-            
             try {
-                // 기록 시트 데이터를 읽어옵니다.
                 const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=기록`;
                 const response = await fetch(url);
                 const data = await response.text();
-                
                 const rows = data.split('\n').map(row => row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim()));
                 
                 let rankingList = [];
                 const now = new Date();
-                const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000)); // 현재 시점 기준 7일 전 시간 계산
+                const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
 
-                // 1행(헤더)을 제외하고 데이터 가공
                 rows.slice(1).forEach(row => {
                     if (row[0] && row[1] && row[2]) {
-                        const recordDate = new Date(row[0].replace(/-/g, '/')); // 날짜 객체화
+                        const recordDate = new Date(row[0].replace(/-/g, '/'));
                         const nickname = row[1];
                         const count = parseInt(row[2]) || 0;
-
-                        // ⚠️ 최근 7일 이내에 공부한 이력이 있는 유저만 필터링!
                         if (recordDate >= sevenDaysAgo) {
                             rankingList.push({ nickname: nickname, count: count });
                         }
                     }
                 });
 
-                // 공부 횟수 기준으로 내림차순(높은 순) 정렬
                 rankingList.sort((a, b) => b.count - a.count);
-
                 tableBody.innerHTML = "";
+                
                 if(rankingList.length === 0) {
                     tableBody.innerHTML = `<tr><td colspan="3" style="color:#888;">최근 7일간 학습 기록이 없습니다.</td></tr>`;
                     return;
                 }
 
-                // 랭킹 표 그리기
                 rankingList.forEach((user, idx) => {
                     const rank = idx + 1;
                     let rowClass = "";
-                    if(rank <= 3) rowClass = `class="rank-row-${rank}"`; // 1, 2, 3등 색상 클래스 부여
-                    
-                    tableBody.innerHTML += `
-                        <tr ${rowClass}>
-                            <td>${rank}등</td>
-                            <td>${user.nickname}</td>
-                            <td>${user.count}회</td>
-                        </tr>
-                    `;
+                    if(rank <= 3) rowClass = `class="rank-row-${rank}"`;
+                    tableBody.innerHTML += `<tr ${rowClass}><td>${rank}등</td><td>${user.nickname}</td><td>${user.count}회</td></tr>`;
                 });
-
             } catch(e) {
-                console.error("랭킹 로드 실패:", e);
                 tableBody.innerHTML = `<tr><td colspan="3" style="color:red;">랭킹 로드 실패</td></tr>`;
             }
         }
