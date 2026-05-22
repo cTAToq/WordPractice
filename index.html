@@ -3,443 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>일본어 마스터 앱 - Final Step</title>
+    <title>일본어 마스터 앱 - Final Edition</title>
     <style>
         :root {
-            --bg-color: #f8f9fa;
-            --card-bg: #ffffff;
-            --text-main: #212529;
-            --text-sub: #495057;
-            --border-color: #ced4da;
-            --shadow: rgba(0, 0, 0, 0.05);
-            --shadow-lg: rgba(0, 0, 0, 0.1);
+            --bg-color: #f8f9fa; --card-bg: #ffffff; --text-main: #212529;
+            --text-sub: #495057; --border-color: #ced4da; --shadow: rgba(0,0,0,0.05);
         }
-
         [data-theme="dark"] {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --text-main: #e0e0e0;
-            --text-sub: #a0a0a0;
-            --border-color: #444444;
-            --shadow: rgba(0, 0, 0, 0.2);
-            --shadow-lg: rgba(0, 0, 0, 0.4);
+            --bg-color: #121212; --card-bg: #1e1e1e; --text-main: #e0e0e0;
+            --text-sub: #a0a0a0; --border-color: #444444;
         }
-
-        body { 
-            font-family: sans-serif; background: var(--bg-color); color: var(--text-main);
-            display: flex; flex-direction: column; align-items: center; justify-content: flex-start; 
-            min-height: 100vh; margin: 0; padding: 20px 20px 80px 20px; box-sizing: border-box; transition: background 0.3s, color 0.3s;
-        }
-
-        .theme-toggle {
-            position: absolute; top: 20px; right: 20px; background: var(--card-bg); border: 2px solid var(--border-color);
-            padding: 8px 12px; border-radius: 20px; cursor: pointer; font-weight: bold; color: var(--text-main); box-shadow: 0 2px 5px var(--shadow);
-        }
-
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: var(--card-bg);
-            display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--border-color); box-shadow: 0 -2px 10px var(--shadow); z-index: 1000;
-        }
-        .nav-btn { background: none; border: none; color: var(--text-sub); font-size: 16px; font-weight: bold; cursor: pointer; width: 50%; height: 100%; transition: all 0.2s; }
-        .nav-btn.active { color: #007bff; background: rgba(0, 123, 255, 0.05); }
-
-        .app-section { display: none; flex-direction: column; align-items: center; width: 100%; }
+        body { font-family: sans-serif; background: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 20px 20px 80px; transition: 0.3s; }
+        
+        .theme-toggle { position: absolute; top: 20px; right: 20px; cursor: pointer; padding: 8px 12px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-main); }
+        .app-section { display: none; width: 100%; flex-direction: column; align-items: center; }
         .app-section.active { display: flex; }
-
-        .options-container, .login-box, .ranking-container { 
-            background: var(--card-bg); padding: 15px 25px; border-radius: 12px; 
-            box-shadow: 0 4px 6px var(--shadow); margin-bottom: 15px; width: 320px; box-sizing: border-box; text-align: center;
-        }
         
-        .checkbox-group { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 10px; max-height: 120px; overflow-y: auto; padding: 5px; }
-        .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 16px; cursor: pointer; width: 100%; color: var(--text-main); }
-        .user-info-display { font-size: 14px; color: var(--text-sub); margin-bottom: 8px; font-weight: bold; }
-
-        /* 🛠️ 카드 겹침 방지 및 반응형 높이 보정 스타일 */
-        .card-wrapper { width: 320px; min-height: 320px; height: auto; perspective: 1000px; margin-bottom: 20px; position: relative; }
-        .card-inner { width: 100%; height: 100%; min-height: 320px; position: relative; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); display: flex; }
+        .card-wrapper { width: 320px; min-height: 320px; height: auto; perspective: 1000px; margin-bottom: 20px; }
+        .card-inner { width: 100%; min-height: 320px; position: relative; transform-style: preserve-3d; transition: 0.5s; display: flex; }
         .card-inner.flipped { transform: rotateY(180deg); }
+        .card-front, .card-back { position: absolute; width: 100%; height: 100%; min-height: 320px; backface-visibility: hidden; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 25px; background: var(--card-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; }
+        .card-back { transform: rotateY(180deg); gap: 10px; }
         
-        .card-front, .card-back {
-            position: absolute; width: 100%; height: 100%; min-height: 320px; backface-visibility: hidden; border-radius: 16px; 
-            box-shadow: 0 4px 15px var(--shadow-lg); padding: 25px 20px; box-sizing: border-box; 
-            display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: var(--card-bg);
-        }
-        .card-back { transform: rotateY(180deg); justify-content: center; gap: 10px; }
-
-        /* 단어 길이에 맞춰 자석처럼 붙게 구조 수정 */
-        .question-container { width: 100%; flex-grow: 1; display: flex; align-items: center; justify-content: center; padding: 10px 0; }
-        .question-text { font-size: 32px; font-weight: bold; color: var(--text-main); text-align: center; word-break: break-all; line-height: 1.3; }
+        .question-text { font-size: 32px; font-weight: bold; margin-bottom: 20px; word-break: break-all; text-align: center; }
+        .answer-input { width: 100%; padding: 12px; font-size: 18px; border: 2px solid var(--border-color); border-radius: 8px; text-align: center; background: var(--card-bg); color: var(--text-main); }
         
-        .answer-input { width: 100%; padding: 12px; font-size: 18px; border: 2px solid var(--border-color); background: var(--card-bg); color: var(--text-main); border-radius: 8px; box-sizing: border-box; text-align: center; outline: none; margin-top: auto; }
-        .answer-input:focus { border-color: #007bff; }
-        
-        .choice-group { display: none; flex-direction: column; gap: 8px; width: 100%; margin-top: auto; }
-        .choice-btn { width: 100%; padding: 10px; font-size: 16px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-main); border-radius: 8px; cursor: pointer; text-align: left; font-weight: bold; transition: background 0.2s; }
-        .choice-btn:hover { background: rgba(0, 123, 255, 0.1); border-color: #007bff; }
-
-        .result-title { font-size: 26px; font-weight: bold; margin-bottom: 10px; }
-        .result-title.correct { color: #28a745; }
-        .result-title.wrong { color: #dc3545; }
-        .final-display { font-size: 28px; font-weight: bold; color: var(--text-main); margin-top: 5px; text-align: center; }
-        .pronounce-display { font-size: 18px; color: var(--text-sub); margin-top: 5px; text-align: center; }
-
-        .btn-main { width: 320px; padding: 14px; font-size: 18px; border-radius: 8px; border: none; background: #007bff; color: white; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-
-        .rank-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 15px; }
-        .rank-table th, .rank-table td { padding: 10px 5px; border-bottom: 1px solid var(--border-color); text-align: center; }
-        .rank-table th { color: var(--text-sub); font-weight: bold; }
-        .rank-row-1 { font-weight: bold; color: #ffd700; }
-        .rank-row-2 { font-weight: bold; color: #c0c0c0; }
-        .rank-row-3 { font-weight: bold; color: #cd7f32; }
+        .btn-main { width: 320px; padding: 14px; border: none; border-radius: 8px; background: #007bff; color: white; font-weight: bold; cursor: pointer; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; height: 60px; background: var(--card-bg); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--border-color); }
+        .nav-btn { background: none; border: none; font-weight: bold; color: var(--text-sub); cursor: pointer; }
+        .nav-btn.active { color: #007bff; }
     </style>
 </head>
 <body>
-
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙 다크모드</button>
 
     <div id="wordSection" class="app-section active">
-        <div class="login-box">
-            <div class="user-info-display" id="userInfoText">👤 내 닉네임 설정</div>
-            <input type="text" id="nicknameInput" style="padding:8px; border:2px solid #007bff; border-radius:6px; width:85%; text-align:center; font-size:15px; font-weight:bold; background: var(--card-bg); color: var(--text-main);" placeholder="닉네임을 입력하고 엔터" onkeypress="changeNickname(event)">
+        <div style="margin-bottom:20px;">
+            <input type="text" id="nicknameInput" style="padding:8px; width:280px; text-align:center;" placeholder="닉네임 입력 후 엔터" onkeypress="changeNickname(event)">
         </div>
-
-        <div class="options-container">
-            <div style="font-weight: bold; color: var(--text-sub);">📖 학습할 진도 선택</div>
-            <div class="checkbox-group" id="checkboxGroup">
-                <span style="color:#888; font-size:14px;">진도 목록 불러오는 중...</span>
-            </div>
-        </div>
-
+        <div id="checkboxGroup" style="margin-bottom:20px;"></div>
+        
         <div class="card-wrapper">
             <div class="card-inner" id="cardInner">
                 <div class="card-front">
-                    <div class="question-container">
-                        <div class="question-text" id="quizQuestion">진도를 선택해 주세요</div>
-                    </div>
-                    <input type="text" class="answer-input" id="userAnswer" placeholder="정답을 입력하세요" onkeypress="handleKeyPress(event)">
-                    <div class="choice-group" id="choiceGroup">
-                        <button class="choice-btn" onclick="selectChoice(1)" id="c1">1. </button>
-                        <button class="choice-btn" onclick="selectChoice(2)" id="c2">2. </button>
-                        <button class="choice-btn" onclick="selectChoice(3)" id="c3">3. </button>
-                        <button class="choice-btn" onclick="selectChoice(4)" id="c4">4. </button>
+                    <div class="question-text" id="quizQuestion">데이터 로딩중...</div>
+                    <input type="text" class="answer-input" id="userAnswer" placeholder="정답 입력" onkeypress="if(event.key==='Enter') handleMainButton()">
+                    <div id="choiceGroup" style="display:none; flex-direction:column; gap:5px; width:100%;">
+                        <button class="choice-btn" onclick="selectChoice(1)" id="c1"></button>
+                        <button class="choice-btn" onclick="selectChoice(2)" id="c2"></button>
+                        <button class="choice-btn" onclick="selectChoice(3)" id="c3"></button>
+                        <button class="choice-btn" onclick="selectChoice(4)" id="c4"></button>
                     </div>
                 </div>
-                <div class="card-back" id="resultBox">
-                    <div class="result-title" id="resultStatus">⭕ 정답입니다!</div>
-                    <div class="final-display" id="resultAnswerDisplay">-</div>
-                    <div class="pronounce-display" id="resultPronounceDisplay">[-]</div>
+                <div class="card-back">
+                    <div id="resultStatus" style="font-size:24px; font-weight:bold;"></div>
+                    <div id="resultAnswerDisplay" style="font-size:28px;"></div>
+                    <div id="resultPronounceDisplay" style="font-size:18px; color:var(--text-sub);"></div>
                 </div>
             </div>
         </div>
         <button class="btn-main" id="btnAction" onclick="handleMainButton()">확인</button>
     </div>
 
-    <div id="rankSection" class="app-section">
-        <div class="ranking-container">
-            <div style="font-weight: bold; font-size: 18px; color: #007bff; margin-bottom: 5px;">🏆 실시간 주간 랭킹</div>
-            <div style="font-size: 12px; color: var(--text-sub); margin-bottom: 10px;">최근 7일간 정답을 맞힌 횟수 누적 기준</div>
-            <table class="rank-table">
-                <thead>
-                    <tr>
-                        <th style="width: 20%;">순위</th>
-                        <th style="width: 50%;">닉네임</th>
-                        <th style="width: 30%;">공부횟수</th>
-                    </tr>
-                </thead>
-                <tbody id="rankTableBody">
-                    <tr><td colspan="3" style="color:#888;">랭킹 데이터를 불러오는 중...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
     <nav class="bottom-nav">
         <button class="nav-btn active" id="navWordBtn" onclick="switchTab('word')">✏️ 단어장</button>
-        <button class="nav-btn" id="navRankBtn" onclick="switchTab('rank')">🏆 주간 랭킹</button>
+        <button class="nav-btn" id="navRankBtn" onclick="switchTab('rank')">🏆 랭킹</button>
     </nav>
 
     <script>
         const spreadsheetId = "1P-EpIcEFuGvFO7kLzE4RuzZy4NxHuofPArlszI6VT2s";
         const scriptUrl = "https://script.google.com/macros/s/AKfycbyjrEMBl-b2b3jcUewUh5mEv3zLWIZyp14DRrwjBG_kCp1FVcBDJgVPIc6qkr7495SbFg/exec";
         
-        let words = [];
-        let currentIndex = 0;
-        let isAnswerChecked = false;
-        let userNickname = "";
+        let words = [], currentIndex = 0, isAnswerChecked = false, userNickname = "";
 
-        function switchTab(tab) {
-            document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            if(tab === 'word') {
-                document.getElementById('wordSection').classList.add('active');
-                document.getElementById('navWordBtn').classList.add('active');
-            } else if(tab === 'rank') {
-                document.getElementById('rankSection').classList.add('active');
-                document.getElementById('navRankBtn').classList.add('active');
-                loadRankingData();
-            }
-        }
-
-        function initTheme() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            document.getElementById('themeBtn').innerText = savedTheme === 'dark' ? '☀️ 라이트모드' : '🌙 다크모드';
-        }
-
-        function toggleTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            document.getElementById('themeBtn').innerText = newTheme === 'dark' ? '☀️ 라이트모드' : '🌙 다크모드';
-        }
-
-        function initUser() {
-            userNickname = localStorage.getItem('study_nickname');
-            if(!userNickname) {
-                userNickname = ""; 
-                localStorage.setItem('study_nickname', userNickname);
-            }
+        // 통합 로직
+        function initApp() {
+            userNickname = localStorage.getItem('study_nickname') || "";
             document.getElementById('nicknameInput').value = userNickname;
-            updateUserDisplay();
+            loadLessons();
         }
 
-        function changeNickname(e) {
-            if (e.key === 'Enter') {
-                const newName = document.getElementById('nicknameInput').value.trim();
-                if(newName) {
-                    userNickname = newName;
-                    localStorage.setItem('study_nickname', userNickname);
-                    updateUserDisplay();
-                    alert(`닉네임이 '${userNickname}'(으)로 설정되었습니다!`);
-                }
-            }
-        }
-
-        function updateUserDisplay() {
-            document.getElementById('userInfoText').innerText = userNickname ? `👤 현재 사용자: ${userNickname}` : `👤 내 닉네임 설정`;
-        }
-
-        async function sendStudyRecord() {
-            if(!scriptUrl.includes("macros/s/")) return; 
-            const payload = { nickname: userNickname || "익명" };
-            try {
-                fetch(scriptUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            } catch(e) { console.error("기록 전송 실패:", e); }
-        }
-
-        async function initApp() {
-            initTheme();
-            initUser();
-            try {
-                const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=설정`;
-                const response = await fetch(url);
-                const data = await response.text();
-                const rows = data.replace(/"/g, '').split('\n').map(row => row.trim());
-                const checkboxGroup = document.getElementById('checkboxGroup');
-                checkboxGroup.innerHTML = '';
-
-                let count = 0;
-                rows.slice(1).forEach(sheetName => {
-                    if (sheetName) {
-                        const checked = count === 0 ? 'checked' : '';
-                        checkboxGroup.innerHTML += `
-                            <label class="checkbox-label">
-                                <input type="checkbox" class="lesson-check" value="${sheetName}" ${checked} onclick="loadSelectedSheets()"> ${sheetName}
-                            </label>
-                        `;
-                        count++;
-                    }
-                });
-                if(count > 0) loadSelectedSheets();
-            } catch (e) {
-                document.getElementById('checkboxGroup').innerHTML = '<span style="color:red;">목록 로드 실패</span>';
-            }
+        async function loadLessons() {
+            const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=설정`;
+            const res = await fetch(url);
+            const data = await res.text();
+            const rows = data.replace(/"/g, '').split('\n').slice(1);
+            const group = document.getElementById('checkboxGroup');
+            rows.forEach((name, i) => {
+                if(!name) return;
+                group.innerHTML += `<label><input type="checkbox" class="lesson-check" value="${name}" ${i==0?'checked':''} onclick="loadSelectedSheets()"> ${name}</label> `;
+            });
+            loadSelectedSheets();
         }
 
         async function loadSelectedSheets() {
-            const checkboxes = document.querySelectorAll('.lesson-check');
-            let fetchPromises = [];
+            const selected = Array.from(document.querySelectorAll('.lesson-check:checked')).map(cb => cb.value);
+            let all = [];
+            for (let s of selected) {
+                const res = await fetch(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(s)}`);
+                const text = await res.text();
+                all = all.concat(text.split('\n').slice(1).map(row => {
+                    const c = row.replace(/"/g, '').split(',');
+                    return { q: c[0], a: c[1], p: c[2], sim: c[3], type: c[4], c1: c[5], c2: c[6], c3: c[7], c4: c[8] };
+                }).filter(r => r.q));
+            }
+            words = all;
             currentIndex = 0;
-            resetCardUI();
-
-            checkboxes.forEach(cb => {
-                if (cb.checked) {
-                    const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(cb.value)}`;
-                    fetchPromises.push(fetchSheetData(url));
-                }
-            });
-
-            if (fetchPromises.length === 0) { 
-                words = [];
-                document.getElementById('quizQuestion').innerText = "진도를 선택해 주세요"; 
-                return; 
-            }
-            
-            document.getElementById('quizQuestion').innerText = "로딩 중...";
-            const results = await Promise.all(fetchPromises);
-            
-            let singleBasket = [];
-            results.forEach(arr => {
-                if(arr && arr.length > 0) {
-                    singleBasket = singleBasket.concat(arr);
-                }
-            });
-            
-            if (singleBasket.length === 0) {
-                words = [];
-                document.getElementById('quizQuestion').innerText = "단어 없음";
-                return;
-            }
-
-            words = singleBasket;
             shuffleArray(words);
-
-            if (words.length > 0) showQuestion();
-            else document.getElementById('quizQuestion').innerText = "단어 없음";
-        }
-
-        async function fetchSheetData(url) {
-            let tempArray = [];
-            try {
-                const response = await fetch(url);
-                const data = await response.text();
-                const rows = data.replace(/\r/g, '').split('\n');
-                
-                rows.slice(1).forEach(row => {
-                    const trimmedRow = row.trim();
-                    if(!trimmedRow) return;
-                    
-                    const cells = trimmedRow.split(',').map(cell => cell.replace(/^"|"$/g, '').trim());
-                    
-                    if(cells[0] && cells[0] !== "질문" && cells[0] !== "question" && cells[1]) {
-                        tempArray.push({ 
-                            question: cells[0], 
-                            answer: cells[1], 
-                            pronounce: cells[2] || "", 
-                            similar: cells[3] || "",
-                            type: cells[4] || "주관식",
-                            c1: cells[5] || "",
-                            c2: cells[6] || "",
-                            c3: cells[7] || "",
-                            c4: cells[8] || ""
-                        });
-                    }
-                });
-                return tempArray;
-            } catch (e) { 
-                console.error(e); 
-                return [];
-            }
-        }
-
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                const temp = array[i];
-                array[i] = array[j];
-                array[j] = temp;
-            }
-        }
-
-        function showQuestion() {
-            if(words.length === 0) return;
-            
-            const currentQuiz = words[currentIndex];
-            const qTextElem = document.getElementById('quizQuestion');
-            qTextElem.innerText = currentQuiz.question;
-            
-            // 🛠️ 글자 길이에 따른 반응형 폰트 크기 미세 조정
-            if(currentQuiz.question.length > 10) {
-                qTextElem.style.fontSize = "22px";
-            } else if(currentQuiz.question.length > 6) {
-                qTextElem.style.fontSize = "28px";
-            } else {
-                qTextElem.style.fontSize = "38px";
-            }
-
-            const inputElem = document.getElementById('userAnswer');
-            const choiceElem = document.getElementById('choiceGroup');
-
-            if (currentQuiz.type === "객관식") {
-                inputElem.style.display = "none";
-                choiceElem.style.display = "flex";
-                document.getElementById('c1').innerText = `1. ${currentQuiz.c1}`;
-                document.getElementById('c2').innerText = `2. ${currentQuiz.c2}`;
-                document.getElementById('c3').innerText = `3. ${currentQuiz.c3}`;
-                document.getElementById('c4').innerText = `4. ${currentQuiz.c4}`;
-                document.getElementById('btnAction').style.display = "none";
-            } else {
-                choiceElem.style.display = "none";
-                inputElem.style.display = "block";
-                document.getElementById('btnAction').style.display = "block";
-                inputElem.focus();
-            }
-        }
-
-        function handleMainButton() {
-            if (isAnswerChecked) { nextQuestion(); } 
-            else { checkAnswer(document.getElementById('userAnswer').value.trim()); }
-        }
-
-        function selectChoice(num) {
-            if (isAnswerChecked) return;
-            const currentQuiz = words[currentIndex];
-            const selectedText = currentQuiz["c" + num];
-            checkAnswer(selectedText);
+            showQuestion();
         }
 
         function checkAnswer(userInput) {
-            if (words.length === 0) return;
+            const q = words[currentIndex];
+            const cleanInput = userInput.replace(/\s+/g, '').toLowerCase();
+            let answers = [q.a];
+            if (q.sim) answers = answers.concat(q.sim.split(','));
 
-            const currentQuiz = words[currentIndex];
-            const statusBox = document.getElementById('resultStatus');
-            
-            // 1. 유저 입력값에서 모든 공백 제거
-            const cleanUserInput = userInput.replace(/\s+/g, '');
+            const isCorrect = answers.some(ans => ans.replace(/\s+/g, '').toLowerCase() === cleanInput);
 
-            // 2. 정답 후보 목록 생성 및 모든 공백 제거 (유의어 처리를 더 강력하게!)
-            let allowedAnswers = [currentQuiz.answer];
-            if (currentQuiz.similar) {
-                // 쉼표로 나누고, 각 항목의 앞뒤 공백을 확실하게 지움
-                const similarList = currentQuiz.similar.split(',').map(item => item.trim());
-                allowedAnswers = allowedAnswers.concat(similarList);
-            }
-
-            // 3. 정답 목록의 모든 항목에서 공백을 제거한 뒤 비교
-            const isCorrect = allowedAnswers.some(ans => {
-                const cleanAns = ans.replace(/\s+/g, '');
-                return cleanAns === cleanUserInput;
-            });
-
-            if (isCorrect) {
-                statusBox.innerText = "⭕ 정답입니다!";
-                statusBox.className = "result-title correct";
-                sendStudyRecord();
-            } else {
-                statusBox.innerText = "❌ 오답입니다!";
-                statusBox.className = "result-title wrong";
-            }
-
-            document.getElementById('resultAnswerDisplay').innerText = currentQuiz.answer;
-            document.getElementById('resultPronounceDisplay').innerText = `[${currentQuiz.pronounce}]`;
-            
+            document.getElementById('resultStatus').innerText = isCorrect ? "⭕ 정답입니다!" : "❌ 오답입니다!";
+            document.getElementById('resultStatus').className = isCorrect ? "correct" : "wrong";
+            document.getElementById('resultAnswerDisplay').innerText = q.a;
+            document.getElementById('resultPronounceDisplay').innerText = `[${q.p}]`;
             document.getElementById('cardInner').classList.add('flipped');
             isAnswerChecked = true;
-            
-            document.getElementById('btnAction').style.display = "block";
             document.getElementById('btnAction').innerText = "다음 단어 ➔";
         }
 
-        function nextQuestion() {
-            currentIndex = (currentIndex + 1) % words.length;
-            resetCardUI();
-            setTimeout(() => { showQuestion(); }, 250);
-        }
-
-        function handleKeyPress(e) {
-            if (e.key === 'Enter') handleMainButton();
+        function handleMainButton() {
+            if (isAnswerChecked) { currentIndex = (currentIndex + 1) % words.length; resetCardUI(); showQuestion(); }
+            else { checkAnswer(document.getElementById('userAnswer').value); }
         }
 
         function resetCardUI() {
@@ -449,49 +142,9 @@
             document.getElementById('btnAction').innerText = "확인";
         }
 
-        async function loadRankingData() {
-            const tableBody = document.getElementById('rankTableBody');
-            tableBody.innerHTML = `<tr><td colspan="3" style="color:#888;">데이터 집계 중...</td></tr>`;
-            try {
-                const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=기록`;
-                const response = await fetch(url);
-                const data = await response.text();
-                const rows = data.replace(/\r/g, '').split('\n').map(row => row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim()));
-                
-                let rankingList = [];
-                const now = new Date();
-                const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
-
-                rows.slice(1).forEach(row => {
-                    if (row[0] && row[1] && row[2]) {
-                        const recordDate = new Date(row[0].replace(/-/g, '/'));
-                        const nickname = row[1];
-                        const count = parseInt(row[2]) || 0;
-                        if (recordDate >= sevenDaysAgo) {
-                            rankingList.push({ nickname: nickname, count: count });
-                        }
-                    }
-                });
-
-                rankingList.sort((a, b) => b.count - a.count);
-                tableBody.innerHTML = "";
-                
-                if(rankingList.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="3" style="color:#888;">최근 7일간 학습 기록이 없습니다.</td></tr>`;
-                    return;
-                }
-
-                rankingList.forEach((user, idx) => {
-                    const rank = idx + 1;
-                    let rowClass = "";
-                    if(rank <= 3) rowClass = `class="rank-row-${rank}"`;
-                    tableBody.innerHTML += `<tr ${rowClass}><td>${rank}등</td><td>${user.nickname}</td><td>${user.count}회</td></tr>`;
-                });
-            } catch(e) {
-                tableBody.innerHTML = `<tr><td colspan="3" style="color:red;">랭킹 로드 실패</td></tr>`;
-            }
-        }
-
+        function shuffleArray(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
+        function toggleTheme() { document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
+        function changeNickname(e) { if(e.key==='Enter') localStorage.setItem('study_nickname', e.target.value); }
         window.onload = initApp;
     </script>
 </body>
