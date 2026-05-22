@@ -3,69 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>일본어 학습 앱 - Step 2</title>
+    <title>일본어 학습 앱 - Step 3 (랭킹 포함)</title>
     <style>
-        /* 기본 라이트모드 변수 설정 */
         :root {
             --bg-color: #f8f9fa;
             --card-bg: #ffffff;
             --text-main: #212529;
             --text-sub: #495057;
             --border-color: #ced4da;
-            --shadow: rgba(0, 0, 0, 0.1);
+            --shadow: rgba(0, 0, 0, 0.05);
+            --shadow-lg: rgba(0, 0, 0, 0.1);
         }
 
-        /* 다크모드 변수 설정 */
         [data-theme="dark"] {
             --bg-color: #121212;
             --card-bg: #1e1e1e;
             --text-main: #e0e0e0;
             --text-sub: #a0a0a0;
             --border-color: #444444;
-            --shadow: rgba(0, 0, 0, 0.4);
+            --shadow: rgba(0, 0, 0, 0.2);
+            --shadow-lg: rgba(0, 0, 0, 0.4);
         }
 
         body { 
-            font-family: sans-serif; 
-            background: var(--bg-color); 
-            color: var(--text-main);
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; 
-            transition: background 0.3s, color 0.3s;
+            font-family: sans-serif; background: var(--bg-color); color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start; 
+            min-height: 100vh; margin: 0; padding: 20px 20px 80px 20px; box-sizing: border-box; transition: background 0.3s, color 0.3s;
         }
 
-        /* 다크모드 토글 버튼 */
         .theme-toggle {
-            position: absolute; top: 20px; right: 20px;
-            background: var(--card-bg); border: 2px solid var(--border-color);
-            padding: 8px 12px; border-radius: 20px; cursor: pointer;
-            font-weight: bold; color: var(--text-main); box-shadow: 0 2px 5px var(--shadow);
+            position: absolute; top: 20px; right: 20px; background: var(--card-bg); border: 2px solid var(--border-color);
+            padding: 8px 12px; border-radius: 20px; cursor: pointer; font-weight: bold; color: var(--text-main); box-shadow: 0 2px 5px var(--shadow);
         }
 
-        .options-container, .login-box { 
+        /* 하단 탭 메뉴 바 */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: var(--card-bg);
+            display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--border-color); box-shadow: 0 -2px 10px var(--shadow); z-index: 1000;
+        }
+        .nav-btn {
+            background: none; border: none; color: var(--text-sub); font-size: 16px; font-weight: bold; cursor: pointer; width: 50%; height: 100%; transition: all 0.2s;
+        }
+        .nav-btn.active { color: #007bff; background: rgba(0, 123, 255, 0.05); }
+
+        /* 화면 섹션 제어 */
+        .app-section { display: none; flex-direction: column; align-items: center; width: 100%; }
+        .app-section.active { display: flex; }
+
+        .options-container, .login-box, .ranking-container { 
             background: var(--card-bg); padding: 15px 25px; border-radius: 12px; 
-            box-shadow: 0 4px 6px var(--shadow); margin-bottom: 15px; width: 320px; 
-            box-sizing: border-box; text-align: center; transition: background 0.3s;
+            box-shadow: 0 4px 6px var(--shadow); margin-bottom: 15px; width: 320px; box-sizing: border-box; text-align: center;
         }
         
         .checkbox-group { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 10px; max-height: 120px; overflow-y: auto; padding: 5px; }
         .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 16px; cursor: pointer; width: 100%; color: var(--text-main); }
         .user-info-display { font-size: 14px; color: var(--text-sub); margin-bottom: 8px; font-weight: bold; }
 
-        /* 3D 카드 뒤집기 애니메이션을 위한 래퍼 설정 */
-        .card-wrapper {
-            width: 320px; height: 260px; perspective: 1000px; margin-bottom: 20px;
-        }
-        .card-inner {
-            width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        /* 이 클래스가 붙으면 카드가 뒤집힘 */
+        /* 3D 카드 애니메이션 구조 */
+        .card-wrapper { width: 320px; height: 260px; perspective: 1000px; margin-bottom: 20px; }
+        .card-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .card-inner.flipped { transform: rotateY(180deg); }
-
         .card-front, .card-back {
-            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
-            border-radius: 16px; box-shadow: 0 4px 15px var(--shadow); padding: 25px;
-            box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--card-bg);
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 16px; 
+            box-shadow: 0 4px 15px var(--shadow-lg); padding: 25px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--card-bg);
         }
         .card-back { transform: rotateY(180deg); }
 
@@ -80,39 +80,73 @@
         .pronounce-display { font-size: 18px; color: var(--text-sub); margin-top: 5px; }
 
         .btn-main { width: 320px; padding: 14px; font-size: 18px; border-radius: 8px; border: none; background: #007bff; color: white; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+
+        /* 랭킹 스타일 보드 */
+        .rank-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 15px; }
+        .rank-table th, .rank-table td { padding: 10px 5px; border-bottom: 1px solid var(--border-color); text-align: center; }
+        .rank-table th { color: var(--text-sub); font-weight: bold; }
+        .rank-row-1 { font-weight: bold; color: #ffd700; } /* 1등 금색 */
+        .rank-row-2 { font-weight: bold; color: #c0c0c0; } /* 2등 은색 */
+        .rank-row-3 { font-weight: bold; color: #cd7f32; } /* 3등 동색 */
     </style>
 </head>
 <body>
 
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙 다크모드</button>
 
-    <div class="login-box">
-        <div class="user-info-display" id="userInfoText">👤 내 닉네임 설정</div>
-        <input type="text" id="nicknameInput" style="padding:8px; border:2px solid #007bff; border-radius:6px; width:85%; text-align:center; font-size:15px; font-weight:bold; background: var(--card-bg); color: var(--text-main);" placeholder="닉네임을 입력하고 엔터" onkeypress="changeNickname(event)">
+    <div id="wordSection" class="app-section active">
+        <div class="login-box">
+            <div class="user-info-display" id="userInfoText">👤 내 닉네임 설정</div>
+            <input type="text" id="nicknameInput" style="padding:8px; border:2px solid #007bff; border-radius:6px; width:85%; text-align:center; font-size:15px; font-weight:bold; background: var(--card-bg); color: var(--text-main);" placeholder="닉네임을 입력하고 엔터" onkeypress="changeNickname(event)">
+        </div>
+
+        <div class="options-container">
+            <div style="font-weight: bold; color: var(--text-sub);">📖 학습할 진도 선택</div>
+            <div class="checkbox-group" id="checkboxGroup">
+                <span style="color:#888; font-size:14px;">진도 목록 불러오는 중...</span>
+            </div>
+        </div>
+
+        <div class="card-wrapper">
+            <div class="card-inner" id="cardInner">
+                <div class="card-front">
+                    <div class="question-text" id="quizQuestion">진도를 선택해 주세요</div>
+                    <input type="text" class="answer-input" id="userAnswer" placeholder="정답을 입력하세요" onkeypress="handleKeyPress(event)">
+                </div>
+                <div class="card-back" id="resultBox">
+                    <div class="result-title" id="resultStatus">⭕ 정답입니다!</div>
+                    <div class="final-display" id="resultAnswerDisplay">-</div>
+                    <div class="pronounce-display" id="resultPronounceDisplay">[-]</div>
+                </div>
+            </div>
+        </div>
+        <button class="btn-main" id="btnAction" onclick="handleMainButton()">확인</button>
     </div>
 
-    <div class="options-container">
-        <div style="font-weight: bold; color: var(--text-sub);">📖 학습할 진도 선택</div>
-        <div class="checkbox-group" id="checkboxGroup">
-            <span style="color:#888; font-size:14px;">진도 목록 불러오는 중...</span>
+    <div id="rankSection" class="app-section">
+        <div class="ranking-container">
+            <div style="font-weight: bold; font-size: 18px; color: #007bff; margin-bottom: 5px;">🏆 실시간 주간 랭킹</div>
+            <div style="font-size: 12px; color: var(--text-sub); margin-bottom: 10px;">최근 7일간 정답을 맞힌 횟수 누적 기준</div>
+            
+            <table class="rank-table">
+                <thead>
+                    <tr>
+                        <th style="width: 20%;">순위</th>
+                        <th style="width: 50%;">닉네임</th>
+                        <th style="width: 30%;">공부횟수</th>
+                    </tr>
+                </thead>
+                <tbody id="rankTableBody">
+                    <tr><td colspan="3" style="color:#888;">랭킹 데이터를 불러오는 중...</td></tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <div class="card-wrapper">
-        <div class="card-inner" id="cardInner">
-            <div class="card-front">
-                <div class="question-text" id="quizQuestion">진도를 선택해 주세요</div>
-                <input type="text" class="answer-input" id="userAnswer" placeholder="정답을 입력하세요" onkeypress="handleKeyPress(event)">
-            </div>
-            <div class="card-back" id="resultBox">
-                <div class="result-title" id="resultStatus">⭕ 정답입니다!</div>
-                <div class="final-display" id="resultAnswerDisplay">あ</div>
-                <div class="pronounce-display" id="resultPronounceDisplay">[a]</div>
-            </div>
-        </div>
-    </div>
-
-    <button class="btn-main" id="btnAction" onclick="handleMainButton()">확인</button>
+    <nav class="bottom-nav">
+        <button class="nav-btn active" id="navWordBtn" onclick="switchTab('word')">✏️ 단어장</button>
+        <button class="nav-btn" id="navRankBtn" onclick="switchTab('rank')">🏆 주간 랭킹</button>
+    </nav>
 
     <script>
         const spreadsheetId = "1P-EpIcEFuGvFO7kLzE4RuzZy4NxHuofPArlszI6VT2s";
@@ -123,7 +157,21 @@
         let isAnswerChecked = false;
         let userNickname = "";
 
-        // [기능 3] 다크모드 시스템
+        // 탭 전환 제어 함수
+        function switchTab(tab) {
+            document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            
+            if(tab === 'word') {
+                document.getElementById('wordSection').classList.add('active');
+                document.getElementById('navWordBtn').classList.add('active');
+            } else if(tab === 'rank') {
+                document.getElementById('rankSection').classList.add('active');
+                document.getElementById('navRankBtn').classList.add('active');
+                loadRankingData(); // 랭킹 탭을 누를 때마다 실시간으로 데이터를 긁어옴
+            }
+        }
+
         function initTheme() {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
@@ -155,6 +203,7 @@
                     userNickname = newName;
                     localStorage.setItem('study_nickname', userNickname);
                     updateUserDisplay();
+                    alert(`닉네임이 '${userNickname}'(으)로 설정되었습니다!`);
                 }
             }
         }
@@ -200,11 +249,10 @@
             }
         }
 
-        // [기능 1 & 2] 데이터 동기화 대기 보장형 자동 리로드 시스템
+        // [기능 1 & 2 튜닝] 완전히 값을 수집하여 보장된 상태로 처리하는 리로드 함수
         async function loadSelectedSheets() {
             const checkboxes = document.querySelectorAll('.lesson-check');
             let fetchPromises = [];
-            words = [];
             currentIndex = 0;
             resetCardUI();
 
@@ -216,33 +264,43 @@
             });
 
             if (fetchPromises.length === 0) { 
+                words = [];
                 document.getElementById('quizQuestion').innerText = "진도를 선택해 주세요"; 
                 return; 
             }
             
             document.getElementById('quizQuestion').innerText = "로딩 중...";
             
-            // 모든 시트 데이터를 완벽히 다 받아올 때까지 명확히 기다립니다.
-            await Promise.all(fetchPromises);
+            // 시트들로부터 리턴된 서브 단어 배열들을 완전히 병합 처리
+            const results = await Promise.all(fetchPromises);
+            let combinedWords = [];
+            results.forEach(arr => { if(arr) combinedWords = combinedWords.concat(arr); });
             
-            // 데이터가 확실히 적재된 후 랜덤 셔플 작동!
+            // 🎯 비동기가 완전히 끝난 완결된 단어 리스트를 전역에 넣고 '직후에 셔플'을 확실하게 실행!
+            words = combinedWords;
             shuffleArray(words);
 
             if (words.length > 0) showQuestion();
             else document.getElementById('quizQuestion').innerText = "단어 없음";
         }
 
+        // 개별 시트에서 긁어와 임시 가공용 배열을 던져주는 순수 함수 형태로 전환
         async function fetchSheetData(url) {
+            let tempArray = [];
             try {
                 const response = await fetch(url);
                 const data = await response.text();
                 const rows = data.split('\n').map(row => row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim()));
                 rows.slice(1).forEach(row => {
                     if(row[0]) {
-                        words.push({ question: row[0], answer: row[1], pronounce: row[2], similar: row[3] || "" });
+                        tempArray.push({ question: row[0], answer: row[1], pronounce: row[2], similar: row[3] || "" });
                     }
                 });
-            } catch (e) { console.error(e); }
+                return tempArray;
+            } catch (e) { 
+                console.error(e); 
+                return [];
+            }
         }
 
         function shuffleArray(array) {
@@ -253,7 +311,7 @@
         }
 
         function showQuestion() {
-            document.getElementById('quizQuestion').innerText = words[currentIndex].question;
+            if(words.length > 0) document.getElementById('quizQuestion').innerText = words[currentIndex].question;
         }
 
         function handleMainButton() {
@@ -261,7 +319,6 @@
             else { checkAnswer(); }
         }
 
-        // [기능 4] 카드 뒤집기 정답 확인 메커니즘
         function checkAnswer() {
             if (words.length === 0) return;
 
@@ -277,7 +334,6 @@
 
             const isCorrect = allowedAnswers.includes(userInput);
 
-            // 결과 보드 세팅
             if (isCorrect) {
                 statusBox.innerText = "⭕ 정답입니다!";
                 statusBox.className = "result-title correct";
@@ -290,9 +346,7 @@
             document.getElementById('resultAnswerDisplay').innerText = currentQuiz.answer;
             document.getElementById('resultPronounceDisplay').innerText = `[${currentQuiz.pronounce}]`;
             
-            // 카드 뒤집기 클래스 부여! (3D Flip 애니메이션 작동)
             document.getElementById('cardInner').classList.add('flipped');
-
             isAnswerChecked = true;
             document.getElementById('btnAction').innerText = "다음 단어 ➔";
         }
@@ -300,8 +354,7 @@
         function nextQuestion() {
             currentIndex = (currentIndex + 1) % words.length;
             resetCardUI();
-            // 카드가 원상태로 돌아오는 시간(0.3초 뒤)에 맞춰 다음 문제로 텍스트 교체
-            setTimeout(() => { showQuestion(); }, 300);
+            setTimeout(() => { showQuestion(); }, 250);
         }
 
         function handleKeyPress(e) {
@@ -311,8 +364,69 @@
         function resetCardUI() {
             isAnswerChecked = false;
             document.getElementById('userAnswer').value = "";
-            document.getElementById('cardInner').classList.remove('flipped'); // 카드 원상태로 휙
+            document.getElementById('cardInner').classList.remove('flipped');
             document.getElementById('btnAction').innerText = "확인";
+        }
+
+        // [기능 5] 구글 시트에서 기록 탭 데이터를 직접 긁어와 주간(7일 이내) 랭킹 산출
+        async function loadRankingData() {
+            const tableBody = document.getElementById('rankTableBody');
+            tableBody.innerHTML = `<tr><td colspan="3" style="color:#888;">데이터 집계 중...</td></tr>`;
+            
+            try {
+                // 기록 시트 데이터를 읽어옵니다.
+                const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=기록`;
+                const response = await fetch(url);
+                const data = await response.text();
+                
+                const rows = data.split('\n').map(row => row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim()));
+                
+                let rankingList = [];
+                const now = new Date();
+                const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000)); // 현재 시점 기준 7일 전 시간 계산
+
+                // 1행(헤더)을 제외하고 데이터 가공
+                rows.slice(1).forEach(row => {
+                    if (row[0] && row[1] && row[2]) {
+                        const recordDate = new Date(row[0].replace(/-/g, '/')); // 날짜 객체화
+                        const nickname = row[1];
+                        const count = parseInt(row[2]) || 0;
+
+                        // ⚠️ 최근 7일 이내에 공부한 이력이 있는 유저만 필터링!
+                        if (recordDate >= sevenDaysAgo) {
+                            rankingList.push({ nickname: nickname, count: count });
+                        }
+                    }
+                });
+
+                // 공부 횟수 기준으로 내림차순(높은 순) 정렬
+                rankingList.sort((a, b) => b.count - a.count);
+
+                tableBody.innerHTML = "";
+                if(rankingList.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="3" style="color:#888;">최근 7일간 학습 기록이 없습니다.</td></tr>`;
+                    return;
+                }
+
+                // 랭킹 표 그리기
+                rankingList.forEach((user, idx) => {
+                    const rank = idx + 1;
+                    let rowClass = "";
+                    if(rank <= 3) rowClass = `class="rank-row-${rank}"`; // 1, 2, 3등 색상 클래스 부여
+                    
+                    tableBody.innerHTML += `
+                        <tr ${rowClass}>
+                            <td>${rank}등</td>
+                            <td>${user.nickname}</td>
+                            <td>${user.count}회</td>
+                        </tr>
+                    `;
+                });
+
+            } catch(e) {
+                console.error("랭킹 로드 실패:", e);
+                tableBody.innerHTML = `<tr><td colspan="3" style="color:red;">랭킹 로드 실패</td></tr>`;
+            }
         }
 
         window.onload = initApp;
