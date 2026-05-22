@@ -540,45 +540,99 @@
         }
 
         async function loadRankingData() {
+
             const tableBody = document.getElementById('rankTableBody');
-            tableBody.innerHTML = `<tr><td colspan="3" style="color:#888;">데이터 집계 중...</td></tr>`;
+        
+            tableBody.innerHTML =
+                `<tr><td colspan="3" style="color:#888;">데이터 집계 중...</td></tr>`;
+        
             try {
-                const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=기록`;
+        
+                const url =
+                    `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=기록`;
+        
                 const response = await fetch(url);
-                const data = await response.text();
-                const rows = data.replace(/\r/g, '').split('\n').map(row => row.split(',').map(cell => cell.replace(/^"|"$/g, '').trim()));
-                
-                let rankingList = [];
+        
+                const csvText = await response.text();
+        
+                const parsed = Papa.parse(csvText.trim());
+        
+                const rows = parsed.data.slice(1);
+        
+                const weeklyScores = {};
+        
                 const now = new Date();
-                const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
-
-                rows.slice(1).forEach(row => {
-                    if (row[0] && row[1] && row[2]) {
-                        const recordDate = new Date(row[0].replace(/-/g, '/'));
-                        const nickname = row[1];
-                        const count = parseInt(row[2]) || 0;
-                        if (recordDate >= sevenDaysAgo) {
-                            rankingList.push({ nickname: nickname, count: count });
+        
+                rows.forEach(row => {
+        
+                    if (!row[0] || !row[1]) return;
+        
+                    const recordDate = new Date(row[0]);
+        
+                    const nickname = row[1];
+        
+                    const isCorrect =
+                        String(row[3]).toUpperCase() === "TRUE";
+        
+                    const diffDays =
+                        (now - recordDate) /
+                        (1000 * 60 * 60 * 24);
+        
+                    // 최근 7일 + 정답만 카운트
+                    if (diffDays <= 7 && isCorrect) {
+        
+                        if (!weeklyScores[nickname]) {
+                            weeklyScores[nickname] = 0;
                         }
+        
+                        weeklyScores[nickname]++;
+        
                     }
+        
                 });
-
-                rankingList.sort((a, b) => b.count - a.count);
+        
+                const rankingList =
+                    Object.entries(weeklyScores)
+                    .sort((a,b) => b[1] - a[1]);
+        
                 tableBody.innerHTML = "";
-                
-                if(rankingList.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="3" style="color:#888;">최근 7일간 학습 기록이 없습니다.</td></tr>`;
+        
+                if (rankingList.length === 0) {
+        
+                    tableBody.innerHTML =
+                        `<tr><td colspan="3" style="color:#888;">최근 7일간 학습 기록이 없습니다.</td></tr>`;
+        
                     return;
+        
                 }
-
+        
                 rankingList.forEach((user, idx) => {
+        
                     const rank = idx + 1;
+        
                     let rowClass = "";
-                    if(rank <= 3) rowClass = `class="rank-row-${rank}"`;
-                    tableBody.innerHTML += `<tr ${rowClass}><td>${rank}등</td><td>${user.nickname}</td><td>${user.count}회</td></tr>`;
+        
+                    if(rank <= 3) {
+                        rowClass = `class="rank-row-${rank}"`;
+                    }
+        
+                    tableBody.innerHTML += `
+                        <tr ${rowClass}>
+                            <td>${rank}등</td>
+                            <td>${user[0]}</td>
+                            <td>${user[1]}회</td>
+                        </tr>
+                    `;
+        
                 });
+        
             } catch(e) {
-                tableBody.innerHTML = `<tr><td colspan="3" style="color:red;">랭킹 로드 실패</td></tr>`;
+        
+                console.error(e);
+        
+                tableBody.innerHTML =
+                    `<tr><td colspan="3" style="color:red;">랭킹 로드 실패</td></tr>`;
+        
             }
         }
 
