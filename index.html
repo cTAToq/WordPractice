@@ -391,7 +391,7 @@
             const inputElem = document.getElementById('userAnswer');
             const choiceElem = document.getElementById('choiceGroup');
 
-            if (currentQuiz.type === "객관식") {
+            if (currentQuiz.type.trim() === "객관식") {
                 inputElem.style.display = "none";
                 choiceElem.style.display = "flex";
                 document.getElementById('c1').innerText = `1. ${currentQuiz.c1}`;
