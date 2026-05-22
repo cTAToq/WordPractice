@@ -403,7 +403,10 @@
             let allowedAnswers = [currentQuiz.answer];
             if (currentQuiz.similar) {
                 // 쉼표로 나누고, 각 항목의 앞뒤 공백을 확실하게 지움
-                const similarList = currentQuiz.similar.split(',').map(item => item.trim());
+                const similarList = currentQuiz.similar
+                    .split('|')
+                    .map(item => item.trim())
+                    .filter(item => item);
                 allowedAnswers = allowedAnswers.concat(similarList);
             }
 
