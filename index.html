@@ -407,7 +407,7 @@
                 document.getElementById('c2').innerText = `2. ${currentQuiz.c2}`;
                 document.getElementById('c3').innerText = `3. ${currentQuiz.c3}`;
                 document.getElementById('c4').innerText = `4. ${currentQuiz.c4}`;
-                document.getElementById('btnAction').style.display = "none";
+                //document.getElementById('btnAction').style.display = "none";
             } else {
                 choiceElem.style.display = "none";
                 inputElem.style.display = "block";
@@ -470,7 +470,7 @@
             isAnswerChecked = true;
             
             document.getElementById('btnAction').style.display = "block";
-            document.getElementById('btnAction').innerText = "다음 단어 ➔";
+            document.getElementById('btnAction').innerText = "선택하세요";
         }
 
         function nextQuestion() {
