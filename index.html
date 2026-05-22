@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>개인 기록형 일본어 단어장</title>
+    <title>닉네임 기록형 일본어 단어장</title>
     <style>
         body { font-family: sans-serif; background: #f8f9fa; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
         .options-container { background: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; width: 320px; box-sizing: border-box; text-align: center; }
@@ -11,9 +11,9 @@
         .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 16px; cursor: pointer; width: 100%; }
         .btn-load { background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; margin-top: 12px; font-weight: bold; width: 100%; }
         
-        /* 닉네임 입력 구역 */
+        /* 닉네임 설정 구역 */
         .login-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 15px; width: 320px; box-sizing: border-box; text-align: center; }
-        .user-info-display { font-size: 14px; color: #555; margin-bottom: 5px; font-weight: bold; }
+        .user-info-display { font-size: 14px; color: #555; margin-bottom: 8px; font-weight: bold; }
 
         .quiz-container { background: white; width: 320px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 25px; box-sizing: border-box; text-align: center; margin-bottom: 20px; }
         .question-text { font-size: 56px; font-weight: bold; color: #212529; margin-bottom: 20px; min-height: 80px; display: flex; align-items: center; justify-content: center; }
@@ -29,8 +29,8 @@
 <body>
 
     <div class="login-box">
-        <div class="user-info-display" id="userInfoText">로딩 중...</div>
-        <input type="text" id="nicknameInput" style="padding:6px; border:1px solid #ddd; border-radius:4px; width:70%; text-align:center;" placeholder="닉네임 변경 후 엔터" onkeypress="changeNickname(event)">
+        <div class="user-info-display" id="userInfoText">👤 내 닉네임 설정</div>
+        <input type="text" id="nicknameInput" style="padding:8px; border:2px solid #007bff; border-radius:6px; width:85%; text-align:center; font-size:15px; font-weight:bold;" placeholder="닉네임을 입력하고 엔터" onkeypress="changeNickname(event)">
     </div>
 
     <div class="options-container">
@@ -55,30 +55,23 @@
     <script>
         const spreadsheetId = "1P-EpIcEFuGvFO7kLzE4RuzZy4NxHuofPArlszI6VT2s";
         
-        // ⚠️ 구글 앱스 스크립트 배포 후 받은 웹 앱 URL을 여기에 붙여넣으세요!
+        // ⚠️ 구글 앱스 스크립트 새 배포 후 받은 웹 앱 URL을 여기에 꼭 붙여넣으세요!
         const scriptUrl = "https://script.google.com/macros/s/AKfycbyjrEMBl-b2b3jcUewUh5mEv3zLWIZyp14DRrwjBG_kCp1FVcBDJgVPIc6qkr7495SbFg/exec";
         
         let words = [];
         let currentIndex = 0;
         let isAnswerChecked = false;
-        
         let userNickname = "";
-        let userUID = "";
 
-        // 브라우저 로컬 저장소를 활용해 유저 고유 UID와 닉네임 기억하기
+        // 브라우저에 저장된 기존 닉네임이 있으면 불러오고, 없으면 기본값 부여
         function initUser() {
-            userUID = localStorage.getItem('study_uid');
-            if (!userUID) {
-                // 처음 방문자라면 랜덤 고유 ID 생성 생성
-                userUID = 'uid_' + Math.random().toString(36).substr(2, 9);
-                localStorage.setItem('study_uid', userUID);
+            userNickname = localStorage.getItem('study_nickname');
+            if(!userNickname) {
+                userNickname = "익명_" + Math.floor(1000 + Math.random() * 9000);
+                localStorage.setItem('study_nickname', userNickname);
             }
-            
-            userNickname = localStorage.getItem('study_nickname') || "학습자_" + Math.random().toString(36).substr(2, 4);
-            localStorage.setItem('study_nickname', userNickname);
-            
-            document.getElementById('userInfoText').innerText = `👤 현재 닉네임: ${userNickname}`;
             document.getElementById('nicknameInput').value = userNickname;
+            updateUserDisplay();
         }
 
         function changeNickname(e) {
@@ -87,26 +80,26 @@
                 if(newName) {
                     userNickname = newName;
                     localStorage.setItem('study_nickname', userNickname);
-                    document.getElementById('userInfoText').innerText = `👤 현재 닉네임: ${userNickname}`;
-                    alert("닉네임이 변경되었습니다!");
+                    updateUserDisplay();
+                    alert(`닉네임이 '${userNickname}'(으)로 설정되었습니다!`);
                 }
             }
         }
 
-        // 구글 시트에 공부 카운트를 전송하는 핵심 함수
+        function updateUserDisplay() {
+            document.getElementById('userInfoText').innerText = `👤 현재 사용자: ${userNickname}`;
+        }
+
+        // 구글 시트에 데이터 전송 (닉네임만 보냄)
         async function sendStudyRecord() {
-            if(!scriptUrl.includes("macros/s/")) return; // 주소 세팅 안 됐으면 패스
+            if(!scriptUrl.includes("macros/s/")) return; 
             
-            const payload = {
-                nickname: userNickname,
-                uid: userUID
-            };
+            const payload = { nickname: userNickname };
             
             try {
-                // 비동기로 구글 백엔드 서버에 공부 횟수 기록 요청 (유저는 대기 시간 없이 매끄럽게 넘어감)
                 fetch(scriptUrl, {
                     method: 'POST',
-                    mode: 'no-cors', // CORS 제한 회피 설정
+                    mode: 'no-cors',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
@@ -160,8 +153,8 @@
             await Promise.all(fetchPromises);
             shuffleArray(words);
 
-            if (words.length > 0) { showQuestion(); } 
-            else { document.getElementById('quizQuestion').innerText = "단어 없음"; }
+            if (words.length > 0) showQuestion();
+            else document.getElementById('quizQuestion').innerText = "단어 없음";
         }
 
         async function fetchSheetData(url) {
@@ -207,7 +200,7 @@
             if (isCorrect) {
                 resultBox.className = "result-area correct";
                 document.getElementById('resultStatus').innerText = "⭕ 정답입니다!";
-                sendStudyRecord(); // ✨ 문제를 하나 맞출 때마다 실시간으로 학습 기록 시트에 카운트 누적 요청!
+                sendStudyRecord(); // 정답 맞추면 해당 닉네임 카운트 카운트 업!
             } else {
                 resultBox.className = "result-area wrong";
                 document.getElementById('resultStatus').innerText = "❌ 오답입니다!";
