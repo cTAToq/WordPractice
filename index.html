@@ -56,9 +56,9 @@
         .user-info-display { font-size: 14px; color: var(--text-sub); margin-bottom: 8px; font-weight: bold; }
 
         /* 🛠️ 카드 겹침 방지 및 반응형 높이 보정 스타일 */
-        .card-wrapper {
+        .card-wrapper { 
             width: 320px;
-            min-height: 420px;
+            min-height: 480px;
             height: auto;
             perspective: 1000px;
             margin-bottom: 20px;
@@ -67,18 +67,22 @@
 
         .card-inner {
             width: 100%;
-            min-height: 420px;
+            min-height: 480px;
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
         }
 
+        .card-inner.flipped {
+            transform: rotateY(180deg);
+        }
+
         .card-front,
         .card-back {
             position: absolute;
             width: 100%;
-            min-height: 420px;
+            min-height: 480px;
             backface-visibility: hidden;
             border-radius: 16px;
             box-shadow: 0 4px 15px var(--shadow-lg);
