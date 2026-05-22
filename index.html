@@ -3,62 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>일본어 학습 앱 - Step 1</title>
+    <title>일본어 학습 앱 - Step 2</title>
     <style>
-        body { font-family: sans-serif; background: #f8f9fa; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
-        .options-container { background: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; width: 320px; box-sizing: border-box; text-align: center; }
-        .checkbox-group { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 10px; max-height: 150px; overflow-y: auto; padding: 5px; }
-        .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 16px; cursor: pointer; width: 100%; padding: 4px 0; }
-        
-        .login-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 15px; width: 320px; box-sizing: border-box; text-align: center; }
-        .user-info-display { font-size: 14px; color: #555; margin-bottom: 8px; font-weight: bold; }
+        /* 기본 라이트모드 변수 설정 */
+        :root {
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-main: #212529;
+            --text-sub: #495057;
+            --border-color: #ced4da;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
 
-        .quiz-container { background: white; width: 320px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 25px; box-sizing: border-box; text-align: center; margin-bottom: 20px; }
-        .question-text { font-size: 56px; font-weight: bold; color: #212529; margin-bottom: 20px; min-height: 80px; display: flex; align-items: center; justify-content: center; }
-        .answer-input { width: 100%; padding: 12px; font-size: 18px; border: 2px solid #ced4da; border-radius: 8px; box-sizing: border-box; text-align: center; margin-bottom: 15px; outline: none; }
+        /* 다크모드 변수 설정 */
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-sub: #a0a0a0;
+            --border-color: #444444;
+            --shadow: rgba(0, 0, 0, 0.4);
+        }
+
+        body { 
+            font-family: sans-serif; 
+            background: var(--bg-color); 
+            color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; 
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* 다크모드 토글 버튼 */
+        .theme-toggle {
+            position: absolute; top: 20px; right: 20px;
+            background: var(--card-bg); border: 2px solid var(--border-color);
+            padding: 8px 12px; border-radius: 20px; cursor: pointer;
+            font-weight: bold; color: var(--text-main); box-shadow: 0 2px 5px var(--shadow);
+        }
+
+        .options-container, .login-box { 
+            background: var(--card-bg); padding: 15px 25px; border-radius: 12px; 
+            box-shadow: 0 4px 6px var(--shadow); margin-bottom: 15px; width: 320px; 
+            box-sizing: border-box; text-align: center; transition: background 0.3s;
+        }
+        
+        .checkbox-group { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 10px; max-height: 120px; overflow-y: auto; padding: 5px; }
+        .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 16px; cursor: pointer; width: 100%; color: var(--text-main); }
+        .user-info-display { font-size: 14px; color: var(--text-sub); margin-bottom: 8px; font-weight: bold; }
+
+        /* 3D 카드 뒤집기 애니메이션을 위한 래퍼 설정 */
+        .card-wrapper {
+            width: 320px; height: 260px; perspective: 1000px; margin-bottom: 20px;
+        }
+        .card-inner {
+            width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        /* 이 클래스가 붙으면 카드가 뒤집힘 */
+        .card-inner.flipped { transform: rotateY(180deg); }
+
+        .card-front, .card-back {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+            border-radius: 16px; box-shadow: 0 4px 15px var(--shadow); padding: 25px;
+            box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--card-bg);
+        }
+        .card-back { transform: rotateY(180deg); }
+
+        .question-text { font-size: 56px; font-weight: bold; color: var(--text-main); margin-bottom: 15px; min-height: 80px; display: flex; align-items: center; justify-content: center; }
+        .answer-input { width: 100%; padding: 12px; font-size: 18px; border: 2px solid var(--border-color); background: var(--card-bg); color: var(--text-main); border-radius: 8px; box-sizing: border-box; text-align: center; outline: none; }
         .answer-input:focus { border-color: #007bff; }
-        .result-area { display: none; margin-top: 15px; padding: 15px; border-radius: 8px; font-size: 20px; font-weight: bold; }
-        .result-area.correct { display: block; background: #d4edda; color: #155724; }
-        .result-area.wrong { display: block; background: #f8d7da; color: #721c24; }
-        .final-display { font-size: 24px; font-weight: bold; color: #333; margin-top: 8px; }
-        .btn-main { width: 320px; padding: 14px; font-size: 18px; border-radius: 8px; border: none; background: #007bff; color: white; cursor: pointer; font-weight: bold; }
+        
+        .result-title { font-size: 26px; font-weight: bold; margin-bottom: 10px; }
+        .result-title.correct { color: #28a745; }
+        .result-title.wrong { color: #dc3545; }
+        .final-display { font-size: 28px; font-weight: bold; color: var(--text-main); margin-top: 5px; }
+        .pronounce-display { font-size: 18px; color: var(--text-sub); margin-top: 5px; }
+
+        .btn-main { width: 320px; padding: 14px; font-size: 18px; border-radius: 8px; border: none; background: #007bff; color: white; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙 다크모드</button>
+
     <div class="login-box">
         <div class="user-info-display" id="userInfoText">👤 내 닉네임 설정</div>
-        <input type="text" id="nicknameInput" style="padding:8px; border:2px solid #007bff; border-radius:6px; width:85%; text-align:center; font-size:15px; font-weight:bold;" placeholder="닉네임을 입력하고 엔터" onkeypress="changeNickname(event)">
+        <input type="text" id="nicknameInput" style="padding:8px; border:2px solid #007bff; border-radius:6px; width:85%; text-align:center; font-size:15px; font-weight:bold; background: var(--card-bg); color: var(--text-main);" placeholder="닉네임을 입력하고 엔터" onkeypress="changeNickname(event)">
     </div>
 
     <div class="options-container">
-        <div style="font-weight: bold; color: #495057;">📖 학습할 진도 선택</div>
+        <div style="font-weight: bold; color: var(--text-sub);">📖 학습할 진도 선택</div>
         <div class="checkbox-group" id="checkboxGroup">
             <span style="color:#888; font-size:14px;">진도 목록 불러오는 중...</span>
         </div>
     </div>
 
-    <div class="quiz-container">
-        <div class="question-text" id="quizQuestion">진도를 선택해 주세요</div>
-        <input type="text" class="answer-input" id="userAnswer" placeholder="정답을 입력하세요" onkeypress="handleKeyPress(event)">
-        <div class="result-area" id="resultBox">
-            <div id="resultStatus"></div>
-            <div class="final-display" id="resultAnswerDisplay"></div>
+    <div class="card-wrapper">
+        <div class="card-inner" id="cardInner">
+            <div class="card-front">
+                <div class="question-text" id="quizQuestion">진도를 선택해 주세요</div>
+                <input type="text" class="answer-input" id="userAnswer" placeholder="정답을 입력하세요" onkeypress="handleKeyPress(event)">
+            </div>
+            <div class="card-back" id="resultBox">
+                <div class="result-title" id="resultStatus">⭕ 정답입니다!</div>
+                <div class="final-display" id="resultAnswerDisplay">あ</div>
+                <div class="pronounce-display" id="resultPronounceDisplay">[a]</div>
+            </div>
         </div>
     </div>
 
-    <button class="btn-main" id="btnAction" onclick="checkAnswer()">확인</button>
+    <button class="btn-main" id="btnAction" onclick="handleMainButton()">확인</button>
 
     <script>
         const spreadsheetId = "1P-EpIcEFuGvFO7kLzE4RuzZy4NxHuofPArlszI6VT2s";
-        
-        // 🎯 제공해주신 주소를 코드에 직접 내장했습니다!
         const scriptUrl = "https://script.google.com/macros/s/AKfycbyjrEMBl-b2b3jcUewUh5mEv3zLWIZyp14DRrwjBG_kCp1FVcBDJgVPIc6qkr7495SbFg/exec";
         
         let words = [];
         let currentIndex = 0;
         let isAnswerChecked = false;
         let userNickname = "";
+
+        // [기능 3] 다크모드 시스템
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('themeBtn').innerText = savedTheme === 'dark' ? '☀️ 라이트모드' : '🌙 다크모드';
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            document.getElementById('themeBtn').innerText = newTheme === 'dark' ? '☀️ 라이트모드' : '🌙 다크모드';
+        }
 
         function initUser() {
             userNickname = localStorage.getItem('study_nickname');
@@ -77,7 +155,6 @@
                     userNickname = newName;
                     localStorage.setItem('study_nickname', userNickname);
                     updateUserDisplay();
-                    alert(`닉네임이 '${userNickname}'(으)로 설정되었습니다!`);
                 }
             }
         }
@@ -90,16 +167,12 @@
             if(!scriptUrl.includes("macros/s/")) return; 
             const payload = { nickname: userNickname };
             try {
-                fetch(scriptUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+                fetch(scriptUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             } catch(e) { console.error("기록 전송 실패:", e); }
         }
 
         async function initApp() {
+            initTheme();
             initUser();
             try {
                 const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=설정`;
@@ -113,7 +186,6 @@
                 rows.slice(1).forEach(sheetName => {
                     if (sheetName) {
                         const checked = count === 0 ? 'checked' : '';
-                        // 💡 체크박스를 클릭할 때마다 자동으로 데이터를 로드하도록 변경
                         checkboxGroup.innerHTML += `
                             <label class="checkbox-label">
                                 <input type="checkbox" class="lesson-check" value="${sheetName}" ${checked} onclick="loadSelectedSheets()"> ${sheetName}
@@ -128,12 +200,13 @@
             }
         }
 
+        // [기능 1 & 2] 데이터 동기화 대기 보장형 자동 리로드 시스템
         async function loadSelectedSheets() {
             const checkboxes = document.querySelectorAll('.lesson-check');
             let fetchPromises = [];
             words = [];
             currentIndex = 0;
-            resetUI();
+            resetCardUI();
 
             checkboxes.forEach(cb => {
                 if (cb.checked) {
@@ -148,9 +221,11 @@
             }
             
             document.getElementById('quizQuestion').innerText = "로딩 중...";
+            
+            // 모든 시트 데이터를 완벽히 다 받아올 때까지 명확히 기다립니다.
             await Promise.all(fetchPromises);
             
-            // 🎲 데이터를 다 긁어온 뒤 순서를 무작위로 섞습니다.
+            // 데이터가 확실히 적재된 후 랜덤 셔플 작동!
             shuffleArray(words);
 
             if (words.length > 0) showQuestion();
@@ -170,7 +245,6 @@
             } catch (e) { console.error(e); }
         }
 
-        // 배열 무작위 셔플을 위한 피셔-예이츠 알고리즘
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -182,13 +256,18 @@
             document.getElementById('quizQuestion').innerText = words[currentIndex].question;
         }
 
+        function handleMainButton() {
+            if (isAnswerChecked) { nextQuestion(); } 
+            else { checkAnswer(); }
+        }
+
+        // [기능 4] 카드 뒤집기 정답 확인 메커니즘
         function checkAnswer() {
             if (words.length === 0) return;
-            if (isAnswerChecked) { nextQuestion(); return; }
 
             const currentQuiz = words[currentIndex];
             const userInput = document.getElementById('userAnswer').value.trim();
-            const resultBox = document.getElementById('resultBox');
+            const statusBox = document.getElementById('resultStatus');
             
             let allowedAnswers = [currentQuiz.answer];
             if (currentQuiz.similar) {
@@ -198,34 +277,41 @@
 
             const isCorrect = allowedAnswers.includes(userInput);
 
+            // 결과 보드 세팅
             if (isCorrect) {
-                resultBox.className = "result-area correct";
-                document.getElementById('resultStatus').innerText = "⭕ 정답입니다!";
+                statusBox.innerText = "⭕ 정답입니다!";
+                statusBox.className = "result-title correct";
                 sendStudyRecord();
             } else {
-                resultBox.className = "result-area wrong";
-                document.getElementById('resultStatus').innerText = "❌ 오답입니다!";
+                statusBox.innerText = "❌ 오답입니다!";
+                statusBox.className = "result-title wrong";
             }
 
-            document.getElementById('resultAnswerDisplay').innerText = `${currentQuiz.answer} [${currentQuiz.pronounce}]`;
+            document.getElementById('resultAnswerDisplay').innerText = currentQuiz.answer;
+            document.getElementById('resultPronounceDisplay').innerText = `[${currentQuiz.pronounce}]`;
+            
+            // 카드 뒤집기 클래스 부여! (3D Flip 애니메이션 작동)
+            document.getElementById('cardInner').classList.add('flipped');
+
             isAnswerChecked = true;
             document.getElementById('btnAction').innerText = "다음 단어 ➔";
         }
 
         function nextQuestion() {
             currentIndex = (currentIndex + 1) % words.length;
-            resetUI();
-            showQuestion();
+            resetCardUI();
+            // 카드가 원상태로 돌아오는 시간(0.3초 뒤)에 맞춰 다음 문제로 텍스트 교체
+            setTimeout(() => { showQuestion(); }, 300);
         }
 
         function handleKeyPress(e) {
-            if (e.key === 'Enter') checkAnswer();
+            if (e.key === 'Enter') handleMainButton();
         }
 
-        function resetUI() {
+        function resetCardUI() {
             isAnswerChecked = false;
             document.getElementById('userAnswer').value = "";
-            document.getElementById('resultBox').className = "result-area";
+            document.getElementById('cardInner').classList.remove('flipped'); // 카드 원상태로 휙
             document.getElementById('btnAction').innerText = "확인";
         }
 
