@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>일본어 마스터 앱 - Final Step</title>
+    <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
     <style>
         :root {
             --bg-color: #f8f9fa;
@@ -340,7 +341,8 @@
                     const trimmedRow = row.trim();
                     if(!trimmedRow) return;
                     
-                    const cells = trimmedRow.split(',').map(cell => cell.replace(/^"|"$/g, '').trim());
+                    const parsed = Papa.parse(trimmedRow);
+                    const cells = parsed.data[0].map(cell => String(cell).trim());
                     
                     if(cells[0] && cells[0] !== "질문" && cells[0] !== "question" && cells[1]) {
                         tempArray.push({ 
