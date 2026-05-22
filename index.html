@@ -444,6 +444,35 @@
         function handleKeyPress(e) {
             if (e.key === 'Enter') handleMainButton();
         }
+        document.addEventListener('keydown', function(e) {
+
+            // 문제 없으면 종료
+            if(words.length === 0) return;
+
+            const currentQuiz = words[currentIndex];
+
+            // 객관식 아닐때 무시
+            if(currentQuiz.type !== "객관식") return;
+
+            // 이미 정답 확인했으면 무시
+            if(isAnswerChecked) return;
+
+            switch(e.key) {
+                case '1':
+                    selectChoice(1);
+                    break;
+                case '2':
+                    selectChoice(2);
+                    break;
+                case '3':
+                    selectChoice(3);
+                    break;
+                case '4':
+                    selectChoice(4);
+                    break;
+            }
+        });
+        
 
         function resetCardUI() {
             isAnswerChecked = false;
