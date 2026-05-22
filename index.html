@@ -165,6 +165,25 @@
             </div>
         </div>
         <button class="btn-main" id="btnAction" onclick="handleMainButton()">확인</button>
+        <button
+    id="installBtn"
+    onclick="installApp()"
+    style="
+        display:none;
+        width:320px;
+        margin-top:10px;
+        padding:14px;
+        border:none;
+        border-radius:8px;
+        background:#28a745;
+        color:white;
+        font-size:16px;
+        font-weight:bold;
+        cursor:pointer;
+    "
+>
+📲 앱 설치하기
+</button>
     </div>
 
     <div id="rankSection" class="app-section">
@@ -811,17 +830,19 @@
         
         });
         async function installApp() {
-        
-            if(!deferredPrompt) return;
+
+            if (!deferredPrompt) {
+                alert("현재 설치를 지원하지 않는 환경입니다.");
+                return;
+            }
         
             deferredPrompt.prompt();
         
-            const result =
-                await deferredPrompt.userChoice;
+            const result = await deferredPrompt.userChoice;
         
-            if(result.outcome === 'accepted') {
+            if (result.outcome === 'accepted') {
         
-                console.log('앱 설치 완료');
+                console.log("설치 완료");
         
             }
         
