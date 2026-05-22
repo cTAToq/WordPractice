@@ -183,10 +183,34 @@
             </table>
         </div>
     </div>
+    <div id="statsSection" class="app-section">
+
+        <div class="ranking-container">
+    
+            <div style="
+                font-weight:bold;
+                font-size:18px;
+                color:#28a745;
+                margin-bottom:15px;
+            ">
+                📊 내 학습 통계
+            </div>
+    
+            <div id="statsContent">
+    
+                불러오는 중...
+    
+            </div>
+    
+        </div>
+    
+    </div>
+        
 
     <nav class="bottom-nav">
         <button class="nav-btn active" id="navWordBtn" onclick="switchTab('word')">✏️ 단어장</button>
         <button class="nav-btn" id="navRankBtn" onclick="switchTab('rank')">🏆 주간 랭킹</button>
+        <button class="nav-btn" id="navStatsBtn" onclick="switchTab('stats')">📊 내 통계</button>
     </nav>
 
     <script>
@@ -633,6 +657,112 @@
                 tableBody.innerHTML =
                     `<tr><td colspan="3" style="color:red;">랭킹 로드 실패</td></tr>`;
         
+            }
+        }
+        async function loadMyStats() {
+
+            const statsBox =
+                document.getElementById('statsContent');
+        
+            statsBox.innerHTML = "통계 계산 중...";
+        
+            try {
+        
+                const url =
+                    `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=기록`;
+        
+                const response = await fetch(url);
+        
+                const csvText = await response.text();
+        
+                const parsed = Papa.parse(csvText.trim());
+        
+                const rows = parsed.data.slice(1);
+        
+                const myRows = rows.filter(row =>
+                    row[1] === userNickname
+                );
+        
+                const totalCount = myRows.length;
+        
+                const correctCount = myRows.filter(row =>
+                    String(row[3]).toUpperCase() === "TRUE"
+                ).length;
+        
+                const wrongRows = myRows.filter(row =>
+                    String(row[3]).toUpperCase() === "FALSE"
+                );
+        
+                const accuracy =
+                    totalCount > 0
+                    ? Math.round((correctCount / totalCount) * 100)
+                    : 0;
+        
+                const today = new Date().toISOString()
+                    .slice(0,10);
+        
+                const todayCount = myRows.filter(row =>
+                    row[0].startsWith(today)
+                ).length;
+        
+                let wrongHtml = "";
+        
+                wrongRows.slice(-5).reverse().forEach(row => {
+        
+                    wrongHtml += `
+                        <div style="
+                            padding:6px;
+                            border-bottom:1px solid #444;
+                            font-size:14px;
+                        ">
+                            ❌ ${row[2]}
+                        </div>
+                    `;
+        
+                });
+        
+                if(wrongHtml === "") {
+                    wrongHtml = `
+                        <div style="color:#888;">
+                            최근 오답 없음 🎉
+                        </div>
+                    `;
+                }
+        
+                statsBox.innerHTML = `
+        
+                    <div style="margin-bottom:12px;">
+                        📚 총 학습:
+                        <b>${totalCount}문제</b>
+                    </div>
+        
+                    <div style="margin-bottom:12px;">
+                        ⭕ 정답률:
+                        <b>${accuracy}%</b>
+                    </div>
+        
+                    <div style="margin-bottom:20px;">
+                        🔥 오늘 푼 문제:
+                        <b>${todayCount}문제</b>
+                    </div>
+        
+                    <div style="
+                        font-weight:bold;
+                        margin-bottom:10px;
+                    ">
+                        최근 오답
+                    </div>
+        
+                    ${wrongHtml}
+        
+                `;
+        
+            } catch(e) {
+        
+                console.error(e);
+        
+                statsBox.innerHTML =
+                    `<span style="color:red;">통계 로드 실패</span>`;
             }
         }
 
