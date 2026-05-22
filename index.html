@@ -191,7 +191,7 @@
         function initUser() {
             userNickname = localStorage.getItem('study_nickname');
             if(!userNickname) {
-                userNickname = "익명_" + Math.floor(1000 + Math.random() * 9000);
+                userNickname = "";
                 localStorage.setItem('study_nickname', userNickname);
             }
             document.getElementById('nicknameInput').value = userNickname;
