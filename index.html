@@ -390,7 +390,8 @@
 
             const inputElem = document.getElementById('userAnswer');
             const choiceElem = document.getElementById('choiceGroup');
-
+            console.log("타입확인:", "[" + currentQuiz.type + "]");
+            
             if (currentQuiz.type.trim() === "객관식") {
                 inputElem.style.display = "none";
                 choiceElem.style.display = "flex";
