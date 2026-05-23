@@ -633,7 +633,7 @@
                 const today = new Date().toISOString().slice(0,10);
         
                 const todayCount = myRows.filter(
-                    row => row[0].startsWith(today)
+                    row => row[0] && row[0].startsWith(today)
                 ).length;
         
                 let wrongHtml = "";
