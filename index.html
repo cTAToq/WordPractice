@@ -7,6 +7,7 @@
     <link rel="manifest" href="manifest.json">
     <title>일본어단어장</title>
     <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg-color: #f8f9fa;
@@ -204,6 +205,8 @@
         <div class="ranking-container">
             <div style="font-weight:bold; font-size:18px; color:#28a745; margin-bottom:15px;">📊 내 학습 통계</div>
             <div id="statsContent">불러오는 중...</div>
+            <canvas id="studyChart" style="margin-top:20px;"></canvas>
+            <canvas id="accuracyChart" style="margin-top:20px;"></canvas>
         </div>
     </div>
 
@@ -605,7 +608,34 @@
                 const parsed = Papa.parse(csvText.trim());
                 const rows = parsed.data.slice(1);
                 const myRows = rows.filter(row => row[1] === userNickname);
-                const totalCount = myRows.length;
+                const dailyStudy = {};
+                const dailyAccuracy = {};
+                
+                myRows.forEach(row => {
+                
+                    const date = row[0].slice(0,10);
+                    const isCorrect = String(row[3]).toUpperCase() === "TRUE";
+                
+                    if(!dailyStudy[date]) {
+                        dailyStudy[date] = 0;
+                    }
+                
+                    dailyStudy[date]++;
+                
+                    if(!dailyAccuracy[date]) {
+                        dailyAccuracy[date] = {
+                            total:0,
+                            correct:0
+                        };
+                    }
+                
+                    dailyAccuracy[date].total++;
+                
+                    if(isCorrect) {
+                        dailyAccuracy[date].correct++;
+                    }
+                });
+                                const totalCount = myRows.length;
                 const correctCount = myRows.filter(row => String(row[3]).toUpperCase() === "TRUE").length;
                 const wrongRows = myRows.filter(row => String(row[3]).toUpperCase() === "FALSE");
                 const accuracy = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
@@ -622,12 +652,44 @@
                 }
         
                 statsBox.innerHTML = `
+                
                     <div style="margin-bottom:12px;">📚 총 학습: <b>${totalCount}문제</b></div>
                     <div style="margin-bottom:12px;">⭕ 정답률: <b>${accuracy}%</b></div>
                     <div style="margin-bottom:20px;">🔥 오늘 푼 문제: <b>${todayCount}문제</b></div>
                     <div style="font-weight:bold; margin-bottom:10px;">최근 오답</div>
                     ${wrongHtml}
                 `;
+                const studyLabels = Object.keys(dailyStudy);
+                const studyData = Object.values(dailyStudy);
+                
+                new Chart(document.getElementById('studyChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: studyLabels,
+                        datasets: [{
+                            label: '일별 학습량',
+                            data: studyData
+                        }]
+                    }
+                });
+                const accuracyLabels = Object.keys(dailyAccuracy);
+
+                const accuracyData = accuracyLabels.map(date => {
+                    const item = dailyAccuracy[date];
+                    return Math.round((item.correct / item.total) * 100);
+                });
+                
+                new Chart(document.getElementById('accuracyChart'), {
+                    type: 'line',
+                    data: {
+                        labels: accuracyLabels,
+                        datasets: [{
+                            label: '정답률 추이',
+                            data: accuracyData
+                        }]
+                    }
+                });
+                
             } catch(e) {
                 console.error(e);
                 statsBox.innerHTML = `<span style="color:red;">통계 로드 실패</span>`;
