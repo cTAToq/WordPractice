@@ -468,15 +468,16 @@
                         [...new Set(wrongQuestions)];
             
                     words = words.filter(word =>
-                        if(words.length === 0) {
-
-                            alert("오답 문제가 없습니다 🎉");
-                        }
 
                         uniqueWrongQuestions.some(q =>
                             q.trim() === word.question.trim()
                         )
                     );
+                    
+                    if(words.length === 0) {
+                    
+                        alert("오답 문제가 없습니다 🎉");
+                    }
             
                 } catch(e) {
             
