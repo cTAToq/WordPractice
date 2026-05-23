@@ -94,12 +94,15 @@
             text-overflow: ellipsis;
         }
         @media (min-width: 1024px) {
-            .checkbox-label {
-                font-size: 20px;
+            .checkbox-group {
+                grid-template-columns: 1fr 1fr;  /* 2열 유지 */
+                gap: 12px;
+                max-width: 800px; /* 전체 컨테이너 넓이 늘리기 */
             }
         
-            .checkbox-group {
-                gap: 12px;
+            .checkbox-label {
+                width: auto;  /* 개별 체크박스 폭 자동으로 늘리기 */
+                min-width: 0; /* flex 내에서 올바른 폭 계산 */
             }
         }
         .user-info-display { font-size: 14px; color: var(--text-sub); margin-bottom: 8px; font-weight: bold; }
