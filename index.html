@@ -271,6 +271,7 @@
         let accuracyChartInstance = null;
         let originalWords = [];
         let streak = 0;
+        let wrongMap = {};
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker
@@ -365,6 +366,9 @@
         async function initApp() {
             initTheme();
             initUser();
+            wrongMap = JSON.parse(
+                localStorage.getItem('wrongMap')
+            ) || {};
             try {
                 const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=설정`;
                 const response = await fetch(url);
@@ -443,45 +447,15 @@
             originalWords = [...words];
 
             if(wrongMode) {
-            
-                try {
-            
-                    const url =
-                    `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=기록`;
-            
-                    const response = await fetch(url);
-            
-                    const csvText = await response.text();
-            
-                    const parsed = Papa.parse(csvText.trim());
-            
-                    const rows = parsed.data.slice(1);
-            
-                    const wrongQuestions = rows
-                        .filter(row =>
-                            row[1] === userNickname &&
-                            String(row[3]).toUpperCase() === "FALSE"
-                        )
-                        .map(row => row[2]);
-            
-                    const uniqueWrongQuestions =
-                        [...new Set(wrongQuestions)];
-            
-                    words = words.filter(word =>
 
-                        uniqueWrongQuestions.some(q =>
-                            q.trim() === word.question.trim()
-                        )
-                    );
-                    
-                    if(words.length === 0) {
-                    
-                        alert("오답 문제가 없습니다 🎉");
-                    }
+                words = words.filter(word =>
             
-                } catch(e) {
+                    (wrongMap[word.question] || 0) > 0
+                );
             
-                    console.error(e);
+                if(words.length === 0) {
+            
+                    alert("오답 문제가 없습니다 🎉");
                 }
             }
             originalWords = [...words];
@@ -631,6 +605,19 @@
             });
 
             if (isCorrect) {
+                if(wrongMap[currentQuiz.question]) {
+
+                    wrongMap[currentQuiz.question]--;
+                
+                    if(wrongMap[currentQuiz.question] < 0) {
+                        wrongMap[currentQuiz.question] = 0;
+                    }
+                
+                    localStorage.setItem(
+                        'wrongMap',
+                        JSON.stringify(wrongMap)
+                    );
+                }
                 streak++;
                 statusBox.innerText = "⭕ 정답입니다!";
                 statusBox.className = "result-title correct";
@@ -648,6 +635,16 @@
                     `🔥 ${streak}연속 정답`;
             } else {
                 streak = 0;
+                if(!wrongMap[currentQuiz.question]) {
+                    wrongMap[currentQuiz.question] = 0;
+                }
+                
+                wrongMap[currentQuiz.question]++;
+                
+                localStorage.setItem(
+                    'wrongMap',
+                    JSON.stringify(wrongMap)
+                );
                 statusBox.innerText = "❌ 오답입니다!";
                 statusBox.className = "result-title wrong";
                 sendStudyRecord(
