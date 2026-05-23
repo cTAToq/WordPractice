@@ -217,6 +217,7 @@
                     <div class="pronounce-display" id="resultPronounceDisplay">[-]</div>
                     <div class="pronounce-display" id="resultCategoryDisplay">[유형]</div>
                     <div class="pronounce-display" id="streakDisplay">🔥 0연속 정답</div>
+                    <div class="pronounce-display" id="wrongScoreDisplay"> ⚠️ 오답점수 : 0 </div>
                 </div>
             </div>
         </div>
@@ -658,7 +659,8 @@
             document.getElementById('resultPronounceDisplay').innerText = `[${currentQuiz.pronounce}]`;
             document.getElementById('resultCategoryDisplay').innerText =
                 `📚 유형 : ${currentQuiz.category}`;
-            
+            document.getElementById('wrongScoreDisplay').innerText =
+                `⚠️ 오답점수 : ${wrongMap[currentQuiz.question] || 0}`;
             document.getElementById('cardInner').classList.add('flipped');
             isAnswerChecked = true;
             
