@@ -293,12 +293,13 @@
             document.getElementById('userInfoText').innerText = userNickname ? `👤 현재 사용자: ${userNickname}` : `👤 내 닉네임 설정`;
         }
 
-        async function sendStudyRecord(question, isCorrect) {
+        async function sendStudyRecord(question, isCorrect, category) {
             if(!scriptUrl.includes("macros/s/")) return;
             
             const payload = {
                 nickname: userNickname || "익명",
                 question: question,
+                category: category,
                 isCorrect: isCorrect,
                 timestamp: new Date().toISOString()
             };
@@ -409,6 +410,7 @@
                         c2: (cells[6] || "").trim(),
                         c3: (cells[7] || "").trim(),
                         c4: (cells[8] || "").trim()
+                        category: (cells[9] || "미분류").trim()
                     });
                 });
                 return tempArray;
@@ -499,11 +501,19 @@
             if (isCorrect) {
                 statusBox.innerText = "⭕ 정답입니다!";
                 statusBox.className = "result-title correct";
-                sendStudyRecord(currentQuiz.question, true);
+                sendStudyRecord(
+                    currentQuiz.question,
+                    true,
+                    currentQuiz.category
+                );
             } else {
                 statusBox.innerText = "❌ 오답입니다!";
                 statusBox.className = "result-title wrong";
-                sendStudyRecord(currentQuiz.question, false);
+                sendStudyRecord(
+                    currentQuiz.question,
+                    false,
+                    currentQuiz.category
+                );
             }
 
             document.getElementById('resultAnswerDisplay').innerText = currentQuiz.answer;
