@@ -248,7 +248,6 @@
         <button class="nav-btn active" id="navWordBtn" onclick="switchTab('word')">✏️ 단어장</button>
         <button class="nav-btn" id="navRankBtn" onclick="switchTab('rank')">🏆 주간 랭킹</button>
         <button class="nav-btn" id="navStatsBtn" onclick="switchTab('stats')">📊 내 통계</button>
-        <button class="nav-btn" id="navWrongBtn" onclick="loadWrongNote()">❌ 오답노트</button>
     </nav>
 
     <script>
@@ -378,6 +377,15 @@
                         count++;
                     }
                 });
+                checkboxGroup.innerHTML += `
+                    <label class="checkbox-label">
+                        <input type="checkbox"
+                            class="lesson-check"
+                            value="wrong-note"
+                            onclick="loadSelectedSheets()">
+                        ❌ 오답노트
+                    </label>
+                `;
                 if(count > 0) loadSelectedSheets();
             } catch (e) {
                 document.getElementById('checkboxGroup').innerHTML = '<span style="color:red;">목록 로드 실패</span>';
@@ -386,12 +394,16 @@
 
         async function loadSelectedSheets() {
             const checkboxes = document.querySelectorAll('.lesson-check');
+            const wrongMode =
+                document.querySelector(
+                    '.lesson-check[value="wrong-note"]'
+                )?.checked;
             let fetchPromises = [];
             currentIndex = 0;
             resetCardUI();
 
             checkboxes.forEach(cb => {
-                if (cb.checked) {
+                if (cb.checked && cb.value !== "wrong-note") {
                     const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(cb.value)}`;
                     fetchPromises.push(fetchSheetData(url));
                 }
@@ -420,6 +432,42 @@
             }
 
             words = singleBasket;
+            originalWords = [...words];
+
+            if(wrongMode) {
+            
+                try {
+            
+                    const url =
+                    `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=기록`;
+            
+                    const response = await fetch(url);
+            
+                    const csvText = await response.text();
+            
+                    const parsed = Papa.parse(csvText.trim());
+            
+                    const rows = parsed.data.slice(1);
+            
+                    const wrongQuestions = rows
+                        .filter(row =>
+                            row[1] === userNickname &&
+                            String(row[3]).toUpperCase() === "FALSE"
+                        )
+                        .map(row => row[2]);
+            
+                    const uniqueWrongQuestions =
+                        [...new Set(wrongQuestions)];
+            
+                    words = words.filter(word =>
+                        uniqueWrongQuestions.includes(word.question)
+                    );
+            
+                } catch(e) {
+            
+                    console.error(e);
+                }
+            }
             originalWords = [...words];
             shuffleArray(words);
 
@@ -977,65 +1025,6 @@
                         통계 로드 실패
                     </span>
                 `;
-            }
-        }
-        async function loadWrongNote() {
-
-            if(!userNickname) {
-                alert("닉네임이 필요합니다!");
-                return;
-            }
-        
-            try {
-        
-                const url =
-                `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=기록`;
-        
-                const response = await fetch(url);
-        
-                const csvText = await response.text();
-        
-                const parsed = Papa.parse(csvText.trim());
-        
-                const rows = parsed.data.slice(1);
-        
-                const wrongQuestions = rows
-                    .filter(row =>
-                        row[1] === userNickname &&
-                        String(row[3]).toUpperCase() === "FALSE"
-                    )
-                    .map(row => row[2]);
-        
-                const uniqueWrongQuestions =
-                    [...new Set(wrongQuestions)];
-        
-                const wrongWords = originalWords.filter(word =>
-                    uniqueWrongQuestions.includes(word.question)
-                );
-        
-                if(wrongWords.length === 0) {
-        
-                    alert("오답노트가 비어있습니다 🎉");
-                    return;
-                }
-        
-                words = wrongWords;
-        
-                currentIndex = 0;
-        
-                resetCardUI();
-        
-                showQuestion();
-        
-                switchTab('word');
-        
-                alert(`오답노트 ${wrongWords.length}문제 로드 완료!`);
-        
-            } catch(e) {
-        
-                console.error(e);
-        
-                alert("오답노트 로드 실패");
             }
         }
 
