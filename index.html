@@ -613,6 +613,20 @@
                     if(wrongMap[currentQuiz.question] < 0) {
                         wrongMap[currentQuiz.question] = 0;
                     }
+                    if(
+                        document.querySelector(
+                            '.lesson-check[value="wrong-note"]'
+                        )?.checked
+                    ) {
+                    
+                        words = words.filter(word =>
+                            (wrongMap[word.question] || 0) > 0
+                        );
+                    
+                        if(currentIndex >= words.length) {
+                            currentIndex = 0;
+                        }
+                    }
                 
                     localStorage.setItem(
                         'wrongMap',
