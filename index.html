@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#121212">
     <link rel="manifest" href="manifest.json">
     <title>일본어단어장</title>
@@ -31,7 +31,10 @@
         body { 
             font-family: sans-serif; background: var(--bg-color); color: var(--text-main);
             display: flex; flex-direction: column; align-items: center; justify-content: flex-start; 
-            min-height: 100vh; margin: 0; padding: 20px 20px 80px 20px; box-sizing: border-box; transition: background 0.3s, color 0.3s;
+            min-height: 100vh; margin: 0; 
+            /* 🛠️ 하단 바 높이 + 모바일 기기별 하단 안전 여백 확보 */
+            padding: 20px 20px calc(80px + env(safe-area-inset-bottom)) 20px; 
+            box-sizing: border-box; transition: background 0.3s, color 0.3s;
         }
 
         .theme-toggle {
@@ -39,11 +42,23 @@
             padding: 8px 12px; border-radius: 20px; cursor: pointer; font-weight: bold; color: var(--text-main); box-shadow: 0 2px 5px var(--shadow);
         }
 
+        /* 🛠️ 모바일 스크롤 시 화면 하단에 짱짱하게 박혀있도록 개선 */
         .bottom-nav {
-            position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: var(--card-bg);
-            display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--border-color); box-shadow: 0 -2px 10px var(--shadow); z-index: 1000;
+            position: fixed; bottom: 0; left: 0; right: 0; 
+            /* 기본 높이에 스마트폰 하단 홈 바(노치) 영역 자동 추가 */
+            height: calc(60px + env(safe-area-inset-bottom)); 
+            background: var(--card-bg); /* 테마별 배경색을 불투명하게 채워 뒤쪽 컨텐츠 비침 방지 */
+            display: flex; justify-content: space-around; align-items: flex-start; /* 아이폰 노치 대응을 위해 정렬 수정 */
+            border-top: 1px solid var(--border-color); box-shadow: 0 -4px 12px var(--shadow); 
+            z-index: 9999; /* 단어 카드나 버튼이 위로 지나가지 못하게 최상단 레이어로 고정 */
+            padding-top: 5px; box-sizing: border-box;
         }
-        .nav-btn { background: none; border: none; color: var(--text-sub); font-size: 16px; font-weight: bold; cursor: pointer; width: 50%; height: 100%; transition: all 0.2s; }
+        
+        /* 🛠️ 터치 영역 확보 및 노치 기기 대응 패딩 */
+        .nav-btn { 
+            background: none; border: none; color: var(--text-sub); font-size: 16px; font-weight: bold; cursor: pointer; 
+            width: 33.33%; height: 50px; transition: all 0.2s; 
+        }
         .nav-btn.active { color: #007bff; background: rgba(0, 123, 255, 0.05); }
 
         .app-section { display: none; flex-direction: column; align-items: center; width: 100%; }
@@ -58,7 +73,6 @@
         .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 16px; cursor: pointer; width: 100%; color: var(--text-main); }
         .user-info-display { font-size: 14px; color: var(--text-sub); margin-bottom: 8px; font-weight: bold; }
 
-        /* 🛠️ 카드 겹침 방지 및 반응형 높이 보정 스타일 */
         .card-wrapper { 
             width: 320px;
             min-height: 480px;
@@ -99,7 +113,6 @@
         }
         .card-back { transform: rotateY(180deg); justify-content: center; gap: 10px; }
 
-        /* 단어 길이에 맞춰 자석처럼 붙게 구조 수정 */
         .question-container { width: 100%; flex-grow: 1; display: flex; align-items: center; justify-content: center; padding: 10px 0; }
         .question-text { font-size: 32px; font-weight: bold; color: var(--text-main); text-align: center; word-break: break-all; line-height: 1.3; }
         
@@ -165,25 +178,7 @@
             </div>
         </div>
         <button class="btn-main" id="btnAction" onclick="handleMainButton()">확인</button>
-        <button
-    id="installBtn"
-    onclick="installApp()"
-    style="
-        display:block;
-        width:50px;
-        margin-top:10px;
-        padding:14px;
-        border:none;
-        border-radius:8px;
-        background:#143f66;
-        color:white;
-        font-size:16px;
-        font-weight:bold;
-        cursor:pointer;
-    "
->
-📲
-</button>
+        <button id="installBtn" onclick="installApp()" style="display:block; width:50px; margin-top:10px; padding:14px; border:none; border-radius:8px; background:#143f66; color:white; font-size:16px; font-weight:bold; cursor:pointer;">📲</button>
     </div>
 
     <div id="rankSection" class="app-section">
@@ -204,32 +199,14 @@
             </table>
         </div>
     </div>
+
     <div id="statsSection" class="app-section">
-
         <div class="ranking-container">
-    
-            <div style="
-                font-weight:bold;
-                font-size:18px;
-                color:#28a745;
-                margin-bottom:15px;
-            ">
-                📊 내 학습 통계
-            </div>
-    
-            <div id="statsContent">
-    
-                불러오는 중...
-    
-            </div>
-    
+            <div style="font-weight:bold; font-size:18px; color:#28a745; margin-bottom:15px;">📊 내 학습 통계</div>
+            <div id="statsContent">불러오는 중...</div>
         </div>
-    
     </div>
-        
 
-
-</button>
     <nav class="bottom-nav">
         <button class="nav-btn active" id="navWordBtn" onclick="switchTab('word')">✏️ 단어장</button>
         <button class="nav-btn" id="navRankBtn" onclick="switchTab('rank')">🏆 주간 랭킹</button>
@@ -247,14 +224,13 @@
         let deferredPrompt = null;
 
         if ('serviceWorker' in navigator) {
-
             navigator.serviceWorker
                 .register('/sw.js')
                 .then(() => {
                     console.log('SW 등록 완료');
                 });
-        
         }
+
         function switchTab(tab) {
             document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -265,15 +241,9 @@
                 document.getElementById('rankSection').classList.add('active');
                 document.getElementById('navRankBtn').classList.add('active');
                 loadRankingData();
-            }
-            else if(tab === 'stats') {
-
-                document.getElementById('statsSection')
-                    .classList.add('active');
-            
-                document.getElementById('navStatsBtn')
-                    .classList.add('active');
-            
+            } else if(tab === 'stats') {
+                document.getElementById('statsSection').classList.add('active');
+                document.getElementById('navStatsBtn').classList.add('active');
                 loadMyStats();
             }
         }
@@ -319,9 +289,8 @@
         }
 
         async function sendStudyRecord(question, isCorrect) {
-
             if(!scriptUrl.includes("macros/s/")) return;
-        
+            
             const payload = {
                 nickname: userNickname || "익명",
                 question: question,
@@ -338,7 +307,6 @@
                     },
                     body: JSON.stringify(payload)
                 });
-        
             } catch(e) {
                 console.error("기록 전송 실패:", e);
             }
@@ -416,20 +384,14 @@
         }
 
         async function fetchSheetData(url) {
-
             let tempArray = [];
-        
             try {
-        
                 const response = await fetch(url);
                 const csvText = await response.text();
-        
                 const parsed = Papa.parse(csvText.trim());
-        
                 const rows = parsed.data;
         
                 rows.slice(1).forEach(cells => {
-        
                     if (!cells || cells.length < 2) return;
         
                     tempArray.push({
@@ -443,16 +405,11 @@
                         c3: (cells[7] || "").trim(),
                         c4: (cells[8] || "").trim()
                     });
-        
                 });
-        
                 return tempArray;
-        
             } catch (e) {
-        
                 console.error(e);
                 return [];
-        
             }
         }
 
@@ -472,7 +429,6 @@
             const qTextElem = document.getElementById('quizQuestion');
             qTextElem.innerText = currentQuiz.question;
             
-            // 🛠️ 글자 길이에 따른 반응형 폰트 크기 미세 조정
             if(currentQuiz.question.length > 10) {
                 qTextElem.style.fontSize = "22px";
             } else if(currentQuiz.question.length > 6) {
@@ -492,7 +448,6 @@
                 document.getElementById('c2').innerText = `2. ${currentQuiz.c2}`;
                 document.getElementById('c3').innerText = `3. ${currentQuiz.c3}`;
                 document.getElementById('c4').innerText = `4. ${currentQuiz.c4}`;
-                //document.getElementById('btnAction').style.display = "none";
             } else {
                 choiceElem.style.display = "none";
                 inputElem.style.display = "block";
@@ -520,13 +475,10 @@
             const currentQuiz = words[currentIndex];
             const statusBox = document.getElementById('resultStatus');
             
-            // 1. 유저 입력값에서 모든 공백 제거
             const cleanUserInput = userInput.replace(/\s+/g, '');
 
-            // 2. 정답 후보 목록 생성 및 모든 공백 제거 (유의어 처리를 더 강력하게!)
             let allowedAnswers = [currentQuiz.answer];
             if (currentQuiz.similar) {
-                // 쉼표로 나누고, 각 항목의 앞뒤 공백을 확실하게 지움
                 const similarList = currentQuiz.similar
                     .split('|')
                     .map(item => item.trim())
@@ -534,7 +486,6 @@
                 allowedAnswers = allowedAnswers.concat(similarList);
             }
 
-            // 3. 정답 목록의 모든 항목에서 공백을 제거한 뒤 비교
             const isCorrect = allowedAnswers.some(ans => {
                 const cleanAns = ans.replace(/\s+/g, '');
                 return cleanAns === cleanUserInput;
@@ -569,35 +520,20 @@
         function handleKeyPress(e) {
             if (e.key === 'Enter') handleMainButton();
         }
+
         document.addEventListener('keydown', function(e) {
-
-            // 문제 없으면 종료
             if(words.length === 0) return;
-
             const currentQuiz = words[currentIndex];
-
-            // 객관식 아닐때 무시
             if(currentQuiz.type !== "객관식") return;
-
-            // 이미 정답 확인했으면 무시
             if(isAnswerChecked) return;
 
             switch(e.key) {
-                case '1':
-                    selectChoice(1);
-                    break;
-                case '2':
-                    selectChoice(2);
-                    break;
-                case '3':
-                    selectChoice(3);
-                    break;
-                case '4':
-                    selectChoice(4);
-                    break;
+                case '1': selectChoice(1); break;
+                case '2': selectChoice(2); break;
+                case '3': selectChoice(3); break;
+                case '4': selectChoice(4); break;
             }
         });
-        
 
         function resetCardUI() {
             isAnswerChecked = false;
@@ -607,82 +543,43 @@
         }
 
         async function loadRankingData() {
-
             const tableBody = document.getElementById('rankTableBody');
-        
-            tableBody.innerHTML =
-                `<tr><td colspan="3" style="color:#888;">데이터 집계 중...</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="3" style="color:#888;">데이터 집계 중...</td></tr>`;
         
             try {
-        
-                const url =
-                    `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=기록`;
-        
+                const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=기록`;
                 const response = await fetch(url);
-        
                 const csvText = await response.text();
-        
                 const parsed = Papa.parse(csvText.trim());
-        
                 const rows = parsed.data.slice(1);
-        
                 const weeklyScores = {};
-        
                 const now = new Date();
         
                 rows.forEach(row => {
-        
                     if (!row[0] || !row[1]) return;
-        
                     const recordDate = new Date(row[0]);
-        
                     const nickname = row[1];
+                    const isCorrect = String(row[3]).toUpperCase() === "TRUE";
+                    const diffDays = (now - recordDate) / (1000 * 60 * 60 * 24);
         
-                    const isCorrect =
-                        String(row[3]).toUpperCase() === "TRUE";
-        
-                    const diffDays =
-                        (now - recordDate) /
-                        (1000 * 60 * 60 * 24);
-        
-                    // 최근 7일 + 정답만 카운트
                     if (diffDays <= 7 && isCorrect) {
-        
-                        if (!weeklyScores[nickname]) {
-                            weeklyScores[nickname] = 0;
-                        }
-        
+                        if (!weeklyScores[nickname]) { weeklyScores[nickname] = 0; }
                         weeklyScores[nickname]++;
-        
                     }
-        
                 });
         
-                const rankingList =
-                    Object.entries(weeklyScores)
-                    .sort((a,b) => b[1] - a[1]);
-        
+                const rankingList = Object.entries(weeklyScores).sort((a,b) => b[1] - a[1]);
                 tableBody.innerHTML = "";
         
                 if (rankingList.length === 0) {
-        
-                    tableBody.innerHTML =
-                        `<tr><td colspan="3" style="color:#888;">최근 7일간 학습 기록이 없습니다.</td></tr>`;
-        
+                    tableBody.innerHTML = `<tr><td colspan="3" style="color:#888;">최근 7일간 학습 기록이 없습니다.</td></tr>`;
                     return;
-        
                 }
         
                 rankingList.forEach((user, idx) => {
-        
                     const rank = idx + 1;
-        
                     let rowClass = "";
-        
-                    if(rank <= 3) {
-                        rowClass = `class="rank-row-${rank}"`;
-                    }
-        
+                    if(rank <= 3) { rowClass = `class="rank-row-${rank}"`; }
                     tableBody.innerHTML += `
                         <tr ${rowClass}>
                             <td>${rank}등</td>
@@ -690,157 +587,71 @@
                             <td>${user[1]}회</td>
                         </tr>
                     `;
-        
                 });
-        
             } catch(e) {
-        
                 console.error(e);
-        
-                tableBody.innerHTML =
-                    `<tr><td colspan="3" style="color:red;">랭킹 로드 실패</td></tr>`;
-        
+                tableBody.innerHTML = `<tr><td colspan="3" style="color:red;">랭킹 로드 실패</td></tr>`;
             }
         }
-        async function loadMyStats() {
 
-            const statsBox =
-                document.getElementById('statsContent');
-        
+        async function loadMyStats() {
+            const statsBox = document.getElementById('statsContent');
             statsBox.innerHTML = "통계 계산 중...";
         
             try {
-        
-                const url =
-                    `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=기록`;
-        
+                const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=기록`;
                 const response = await fetch(url);
-        
                 const csvText = await response.text();
-        
                 const parsed = Papa.parse(csvText.trim());
-        
                 const rows = parsed.data.slice(1);
-        
-                const myRows = rows.filter(row =>
-                    row[1] === userNickname
-                );
-        
+                const myRows = rows.filter(row => row[1] === userNickname);
                 const totalCount = myRows.length;
-        
-                const correctCount = myRows.filter(row =>
-                    String(row[3]).toUpperCase() === "TRUE"
-                ).length;
-        
-                const wrongRows = myRows.filter(row =>
-                    String(row[3]).toUpperCase() === "FALSE"
-                );
-        
-                const accuracy =
-                    totalCount > 0
-                    ? Math.round((correctCount / totalCount) * 100)
-                    : 0;
-        
-                const today = new Date().toISOString()
-                    .slice(0,10);
-        
-                const todayCount = myRows.filter(row =>
-                    row[0].startsWith(today)
-                ).length;
+                const correctCount = myRows.filter(row => String(row[3]).toUpperCase() === "TRUE").length;
+                const wrongRows = myRows.filter(row => String(row[3]).toUpperCase() === "FALSE");
+                const accuracy = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+                const today = new Date().toISOString().slice(0,10);
+                const todayCount = myRows.filter(row => row[0].startsWith(today)).length;
         
                 let wrongHtml = "";
-        
                 wrongRows.slice(-5).reverse().forEach(row => {
-        
-                    wrongHtml += `
-                        <div style="
-                            padding:6px;
-                            border-bottom:1px solid #444;
-                            font-size:14px;
-                        ">
-                            ❌ ${row[2]}
-                        </div>
-                    `;
-        
+                    wrongHtml += `<div style="padding:6px; border-bottom:1px solid #444; font-size:14px;">❌ ${row[2]}</div>`;
                 });
         
                 if(wrongHtml === "") {
-                    wrongHtml = `
-                        <div style="color:#888;">
-                            최근 오답 없음 🎉
-                        </div>
-                    `;
+                    wrongHtml = `<div style="color:#888;">최근 오답 없음 🎉</div>`;
                 }
         
                 statsBox.innerHTML = `
-        
-                    <div style="margin-bottom:12px;">
-                        📚 총 학습:
-                        <b>${totalCount}문제</b>
-                    </div>
-        
-                    <div style="margin-bottom:12px;">
-                        ⭕ 정답률:
-                        <b>${accuracy}%</b>
-                    </div>
-        
-                    <div style="margin-bottom:20px;">
-                        🔥 오늘 푼 문제:
-                        <b>${todayCount}문제</b>
-                    </div>
-        
-                    <div style="
-                        font-weight:bold;
-                        margin-bottom:10px;
-                    ">
-                        최근 오답
-                    </div>
-        
+                    <div style="margin-bottom:12px;">📚 총 학습: <b>${totalCount}문제</b></div>
+                    <div style="margin-bottom:12px;">⭕ 정답률: <b>${accuracy}%</b></div>
+                    <div style="margin-bottom:20px;">🔥 오늘 푼 문제: <b>${todayCount}문제</b></div>
+                    <div style="font-weight:bold; margin-bottom:10px;">최근 오답</div>
                     ${wrongHtml}
-        
                 `;
-        
             } catch(e) {
-        
                 console.error(e);
-        
-                statsBox.innerHTML =
-                    `<span style="color:red;">통계 로드 실패</span>`;
+                statsBox.innerHTML = `<span style="color:red;">통계 로드 실패</span>`;
             }
         }
 
         window.onload = initApp;
+        
         window.addEventListener('beforeinstallprompt', (e) => {
-
             e.preventDefault();
-        
             deferredPrompt = e;
-        
-            document.getElementById('installBtn')
-                .style.display = 'block';
-        
+            document.getElementById('installBtn').style.display = 'block';
         });
-        async function installApp() {
 
+        async function installApp() {
             if (!deferredPrompt) {
                 alert("현재 설치를 지원하지 않는 환경입니다.");
                 return;
             }
-        
             deferredPrompt.prompt();
-        
             const result = await deferredPrompt.userChoice;
-        
-            if (result.outcome === 'accepted') {
-        
-                console.log("설치 완료");
-        
-            }
-        
+            if (result.outcome === 'accepted') { console.log("설치 완료"); }
             deferredPrompt = null;
-        
-            document.getElementById('installBtn')
-                .style.display = 'none';
+            document.getElementById('installBtn').style.display = 'none';
         }
     </script>
 </body>
