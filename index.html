@@ -175,6 +175,7 @@
                     <div class="result-title" id="resultStatus">⭕ 정답입니다!</div>
                     <div class="final-display" id="resultAnswerDisplay">-</div>
                     <div class="pronounce-display" id="resultPronounceDisplay">[-]</div>
+                    <div class="pronounce-display" id="resultCategoryDisplay">[유형]</div>
                 </div>
             </div>
         </div>
@@ -518,6 +519,8 @@
 
             document.getElementById('resultAnswerDisplay').innerText = currentQuiz.answer;
             document.getElementById('resultPronounceDisplay').innerText = `[${currentQuiz.pronounce}]`;
+            document.getElementById('resultCategoryDisplay').innerText =
+                `📚 유형 : ${currentQuiz.category}`;
             
             document.getElementById('cardInner').classList.add('flipped');
             isAnswerChecked = true;
