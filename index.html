@@ -635,6 +635,18 @@
                 const wrongRows = myRows.filter(
                     row => String(row[3]).toUpperCase() === "FALSE"
                 );
+                const wrongCategory = {};
+
+                wrongRows.forEach(row => {
+                
+                    const category = row[4] || "미분류";
+                
+                    if(!wrongCategory[category]) {
+                        wrongCategory[category] = 0;
+                    }
+                
+                    wrongCategory[category]++;
+                });
         
                 const accuracy = totalCount > 0
                     ? Math.round((correctCount / totalCount) * 100)
@@ -691,7 +703,29 @@
                     </div>
         
                     ${wrongHtml}
+                    <div style="
+                    font-weight:bold;
+                    margin-top:20px;
+                    margin-bottom:10px;
+                ">
+                    💀 많이 틀린 유형
+                </div>
+                
+                ${Object.entries(wrongCategory)
+                    .sort((a,b) => b[1] - a[1])
+                    .slice(0,5)
+                    .map(item => `
+                        <div style="
+                            padding:6px;
+                            border-bottom:1px solid #444;
+                            font-size:14px;
+                        ">
+                            ${item[0]} : ${item[1]}회
+                        </div>
+                    `).join("")
+                }
                 `;
+                
         
                 // =========================
                 // 날짜별 데이터 집계
