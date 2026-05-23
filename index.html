@@ -225,6 +225,8 @@
         let isAnswerChecked = false;
         let userNickname = "";
         let deferredPrompt = null;
+        let studyChartInstance = null;
+        let accuracyChartInstance = null;
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker
@@ -598,101 +600,218 @@
         }
 
         async function loadMyStats() {
+
             const statsBox = document.getElementById('statsContent');
             statsBox.innerHTML = "통계 계산 중...";
         
             try {
+        
                 const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=기록`;
+        
                 const response = await fetch(url);
                 const csvText = await response.text();
+        
                 const parsed = Papa.parse(csvText.trim());
                 const rows = parsed.data.slice(1);
+        
                 const myRows = rows.filter(row => row[1] === userNickname);
+        
+                const totalCount = myRows.length;
+        
+                const correctCount = myRows.filter(
+                    row => String(row[3]).toUpperCase() === "TRUE"
+                ).length;
+        
+                const wrongRows = myRows.filter(
+                    row => String(row[3]).toUpperCase() === "FALSE"
+                );
+        
+                const accuracy = totalCount > 0
+                    ? Math.round((correctCount / totalCount) * 100)
+                    : 0;
+        
+                const today = new Date().toISOString().slice(0,10);
+        
+                const todayCount = myRows.filter(
+                    row => row[0].startsWith(today)
+                ).length;
+        
+                let wrongHtml = "";
+        
+                wrongRows.slice(-5).reverse().forEach(row => {
+        
+                    wrongHtml += `
+                        <div style="
+                            padding:6px;
+                            border-bottom:1px solid #444;
+                            font-size:14px;
+                        ">
+                            ❌ ${row[2]}
+                        </div>
+                    `;
+                });
+        
+                if(wrongHtml === "") {
+        
+                    wrongHtml = `
+                        <div style="color:#888;">
+                            최근 오답 없음 🎉
+                        </div>
+                    `;
+                }
+        
+                statsBox.innerHTML = `
+                    <div style="margin-bottom:12px;">
+                        📚 총 학습: <b>${totalCount}문제</b>
+                    </div>
+        
+                    <div style="margin-bottom:12px;">
+                        ⭕ 정답률: <b>${accuracy}%</b>
+                    </div>
+        
+                    <div style="margin-bottom:20px;">
+                        🔥 오늘 푼 문제: <b>${todayCount}문제</b>
+                    </div>
+        
+                    <div style="
+                        font-weight:bold;
+                        margin-bottom:10px;
+                    ">
+                        최근 오답
+                    </div>
+        
+                    ${wrongHtml}
+                `;
+        
+                // =========================
+                // 날짜별 데이터 집계
+                // =========================
+        
                 const dailyStudy = {};
                 const dailyAccuracy = {};
-                
+        
                 myRows.forEach(row => {
-                
+        
                     const date = row[0].slice(0,10);
-                    const isCorrect = String(row[3]).toUpperCase() === "TRUE";
-                
+        
+                    const isCorrect =
+                        String(row[3]).toUpperCase() === "TRUE";
+        
+                    // 학습량
                     if(!dailyStudy[date]) {
                         dailyStudy[date] = 0;
                     }
-                
+        
                     dailyStudy[date]++;
-                
+        
+                    // 정답률
                     if(!dailyAccuracy[date]) {
+        
                         dailyAccuracy[date] = {
-                            total:0,
-                            correct:0
+                            total: 0,
+                            correct: 0
                         };
                     }
-                
+        
                     dailyAccuracy[date].total++;
-                
+        
                     if(isCorrect) {
                         dailyAccuracy[date].correct++;
                     }
                 });
-                                const totalCount = myRows.length;
-                const correctCount = myRows.filter(row => String(row[3]).toUpperCase() === "TRUE").length;
-                const wrongRows = myRows.filter(row => String(row[3]).toUpperCase() === "FALSE");
-                const accuracy = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
-                const today = new Date().toISOString().slice(0,10);
-                const todayCount = myRows.filter(row => row[0].startsWith(today)).length;
         
-                let wrongHtml = "";
-                wrongRows.slice(-5).reverse().forEach(row => {
-                    wrongHtml += `<div style="padding:6px; border-bottom:1px solid #444; font-size:14px;">❌ ${row[2]}</div>`;
-                });
+                // =========================
+                // 기존 그래프 제거
+                // =========================
         
-                if(wrongHtml === "") {
-                    wrongHtml = `<div style="color:#888;">최근 오답 없음 🎉</div>`;
+                if(studyChartInstance) {
+                    studyChartInstance.destroy();
                 }
         
-                statsBox.innerHTML = `
-                
-                    <div style="margin-bottom:12px;">📚 총 학습: <b>${totalCount}문제</b></div>
-                    <div style="margin-bottom:12px;">⭕ 정답률: <b>${accuracy}%</b></div>
-                    <div style="margin-bottom:20px;">🔥 오늘 푼 문제: <b>${todayCount}문제</b></div>
-                    <div style="font-weight:bold; margin-bottom:10px;">최근 오답</div>
-                    ${wrongHtml}
-                `;
+                if(accuracyChartInstance) {
+                    accuracyChartInstance.destroy();
+                }
+        
+                // =========================
+                // 학습량 그래프
+                // =========================
+        
                 const studyLabels = Object.keys(dailyStudy);
+        
                 const studyData = Object.values(dailyStudy);
-                
-                new Chart(document.getElementById('studyChart'), {
-                    type: 'bar',
-                    data: {
-                        labels: studyLabels,
-                        datasets: [{
-                            label: '일별 학습량',
-                            data: studyData
-                        }]
+        
+                studyChartInstance = new Chart(
+                    document.getElementById('studyChart'),
+                    {
+                        type: 'bar',
+        
+                        data: {
+                            labels: studyLabels,
+        
+                            datasets: [{
+                                label: '일별 학습량',
+                                data: studyData
+                            }]
+                        },
+        
+                        options: {
+                            responsive: true
+                        }
                     }
-                });
-                const accuracyLabels = Object.keys(dailyAccuracy);
-
-                const accuracyData = accuracyLabels.map(date => {
-                    const item = dailyAccuracy[date];
-                    return Math.round((item.correct / item.total) * 100);
-                });
-                
-                new Chart(document.getElementById('accuracyChart'), {
-                    type: 'line',
-                    data: {
-                        labels: accuracyLabels,
-                        datasets: [{
-                            label: '정답률 추이',
-                            data: accuracyData
-                        }]
+                );
+        
+                // =========================
+                // 정답률 그래프
+                // =========================
+        
+                const accuracyLabels =
+                    Object.keys(dailyAccuracy);
+        
+                const accuracyData =
+                    accuracyLabels.map(date => {
+        
+                        const item = dailyAccuracy[date];
+        
+                        return Math.round(
+                            (item.correct / item.total) * 100
+                        );
+                    });
+        
+                accuracyChartInstance = new Chart(
+                    document.getElementById('accuracyChart'),
+                    {
+                        type: 'line',
+        
+                        data: {
+                            labels: accuracyLabels,
+        
+                            datasets: [{
+                                label: '정답률 추이',
+                                data: accuracyData
+                            }]
+                        },
+        
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: {
+                                    min: 0,
+                                    max: 100
+                                }
+                            }
+                        }
                     }
-                });
-                
+                );
+        
             } catch(e) {
+        
                 console.error(e);
-                statsBox.innerHTML = `<span style="color:red;">통계 로드 실패</span>`;
+        
+                statsBox.innerHTML = `
+                    <span style="color:red;">
+                        통계 로드 실패
+                    </span>
+                `;
             }
         }
 
