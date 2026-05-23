@@ -468,7 +468,14 @@
                         [...new Set(wrongQuestions)];
             
                     words = words.filter(word =>
-                        uniqueWrongQuestions.includes(word.question)
+                        if(words.length === 0) {
+
+                            alert("오답 문제가 없습니다 🎉");
+                        }
+
+                        uniqueWrongQuestions.some(q =>
+                            q.trim() === word.question.trim()
+                        )
                     );
             
                 } catch(e) {
