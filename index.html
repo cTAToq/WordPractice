@@ -692,6 +692,8 @@
         
                 myRows.forEach(row => {
         
+                    if(!row[0]) return;
+
                     const date = row[0].slice(0,10);
         
                     const isCorrect =
