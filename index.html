@@ -163,7 +163,17 @@
                     <div class="question-container">
                         <div class="question-text" id="quizQuestion">진도를 선택해 주세요</div>
                     </div>
-                    <input type="text" class="answer-input" id="userAnswer" placeholder="정답을 입력하세요" onkeypress="handleKeyPress(event)">
+                    <input
+                        type="text"
+                        class="answer-input"
+                        id="userAnswer"
+                        placeholder="정답을 입력하세요"
+                        onkeypress="handleKeyPress(event)"
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="off"
+                        spellcheck="false"
+                        inputmode="search">
                     <div class="choice-group" id="choiceGroup">
                         <button class="choice-btn" onclick="selectChoice(1)" id="c1">1. </button>
                         <button class="choice-btn" onclick="selectChoice(2)" id="c2">2. </button>
