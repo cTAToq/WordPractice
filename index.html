@@ -8,6 +8,7 @@
     <title>일본어단어장</title>
     <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <style>
         :root {
             --bg-color: #f8f9fa;
@@ -207,6 +208,7 @@
                     <div class="final-display" id="resultAnswerDisplay">-</div>
                     <div class="pronounce-display" id="resultPronounceDisplay">[-]</div>
                     <div class="pronounce-display" id="resultCategoryDisplay">[유형]</div>
+                    <div class="pronounce-display" id="streakDisplay">🔥 0연속 정답</div>
                 </div>
             </div>
         </div>
@@ -259,6 +261,7 @@
         let deferredPrompt = null;
         let studyChartInstance = null;
         let accuracyChartInstance = null;
+        let streak = 0;
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker
@@ -561,6 +564,7 @@
             });
 
             if (isCorrect) {
+                streak++;
                 statusBox.innerText = "⭕ 정답입니다!";
                 statusBox.className = "result-title correct";
                 sendStudyRecord(
@@ -568,7 +572,15 @@
                     true,
                     currentQuiz.category
                 );
+                confetti({
+                    particleCount: 80,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+                document.getElementById('streakDisplay').innerText =
+                    `🔥 ${streak}연속 정답`;
             } else {
+                streak = 0;
                 statusBox.innerText = "❌ 오답입니다!";
                 statusBox.className = "result-title wrong";
                 sendStudyRecord(
