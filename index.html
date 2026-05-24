@@ -553,13 +553,25 @@
         }
 
         function speakCurrentSentence() {
-        
+
             const currentQuiz = words[currentIndex];
         
             let textToSpeak = currentQuiz.question;
         
             textToSpeak =
-                textToSpeak.replace(/[＿_]+/g, currentQuiz.answer);
+                textToSpeak.replace(/[＿_]+/g, '');
+        
+            textToSpeak =
+                textToSpeak.replace(/\s+/g, '');
+        
+            if(currentQuiz.answer) {
+        
+                textToSpeak =
+                    textToSpeak.replace(
+                        /([はがをにでと])([。？?])/,
+                        currentQuiz.answer + '$1$2'
+                    );
+            }
         
             speakJapanese(textToSpeak);
         }
