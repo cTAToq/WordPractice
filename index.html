@@ -558,11 +558,8 @@
         
             let textToSpeak = currentQuiz.question;
         
-            if(textToSpeak.includes("＿＿")) {
-        
-                textToSpeak =
-                    textToSpeak.replace(/＿＿+/g, currentQuiz.answer);
-            }
+            textToSpeak =
+                textToSpeak.replace(/[＿_]+/g, currentQuiz.answer);
         
             speakJapanese(textToSpeak);
         }
