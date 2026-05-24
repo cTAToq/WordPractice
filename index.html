@@ -234,6 +234,7 @@
                     <div class="pronounce-display" id="resultPronounceDisplay">[-]</div>
                     <button
                         onclick="speakJapanese(words[currentIndex].answer)"
+                        
                         style="
                             margin-top:8px;
                             padding:8px 14px;
@@ -537,6 +538,7 @@
             }
         }
         function speakJapanese(text) {
+            
 
             speechSynthesis.cancel();
         
@@ -548,6 +550,21 @@
             utterance.rate = 0.9;
         
             speechSynthesis.speak(utterance);
+        }
+
+        function speakCurrentSentence() {
+        
+            const currentQuiz = words[currentIndex];
+        
+            let textToSpeak = currentQuiz.question;
+        
+            if(textToSpeak.includes("＿＿")) {
+        
+                textToSpeak =
+                    textToSpeak.replace(/＿＿+/g, currentQuiz.answer);
+            }
+        
+            speakJapanese(textToSpeak);
         }
 
         function showQuestion() {
