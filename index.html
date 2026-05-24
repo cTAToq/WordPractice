@@ -233,7 +233,7 @@
                     <div class="final-display" id="resultAnswerDisplay">-</div>
                     <div class="pronounce-display" id="resultPronounceDisplay">[-]</div>
                     <button
-                        onclick="speakJapanese(words[currentIndex].answer)"
+                        onclick="speakJapanese(words[currentIndex].tts || words[currentIndex].answer)"
                         
                         style="
                             margin-top:8px;
@@ -519,7 +519,8 @@
                         c2: (cells[6] || "").trim(),
                         c3: (cells[7] || "").trim(),
                         c4: (cells[8] || "").trim(),
-                        category: (cells[9] || "미분류").trim()
+                        category: (cells[9] || "미분류").trim(),
+                        tts: (cells[10] || "").trim()
                     });
                 });
                 return tempArray;
@@ -552,26 +553,6 @@
             speechSynthesis.speak(utterance);
         }
 
-        function speakCurrentSentence() {
-
-            const currentQuiz = words[currentIndex];
-        
-            let textToSpeak = currentQuiz.question;
-        
-            textToSpeak =
-                textToSpeak.replace(/[＿_]+/g, '');
-        
-            textToSpeak =
-                textToSpeak.replace(/\s+/g, '');
-        
-            if(currentQuiz.answer) {
-        
-                textToSpeak =
-                    textToSpeak.replace(
-                        /([はがをにでと])([。？?])/,
-                        currentQuiz.answer + '$1$2'
-                    );
-            }
         
             speakJapanese(textToSpeak);
         }
