@@ -560,10 +560,19 @@
 
                 document.getElementById('userAnswer').blur();
                 document.getElementById('btnAction').style.display = "none";
-                document.getElementById('c1').innerText = `1. ${currentQuiz.c1}`;
-                document.getElementById('c2').innerText = `2. ${currentQuiz.c2}`;
-                document.getElementById('c3').innerText = `3. ${currentQuiz.c3}`;
-                document.getElementById('c4').innerText = `4. ${currentQuiz.c4}`;
+                const choices = [
+                    currentQuiz.c1,
+                    currentQuiz.c2,
+                    currentQuiz.c3,
+                    currentQuiz.c4
+                ];
+                
+                shuffleArray(choices);
+                
+                document.getElementById('c1').innerText = `1. ${choices[0]}`;
+                document.getElementById('c2').innerText = `2. ${choices[1]}`;
+                document.getElementById('c3').innerText = `3. ${choices[2]}`;
+                document.getElementById('c4').innerText = `4. ${choices[3]}`;
             
             } else {
             
