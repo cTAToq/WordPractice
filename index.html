@@ -142,7 +142,18 @@
 
         .question-container { width: 100%; flex-grow: 1; display: flex; align-items: center; justify-content: center; padding: 10px 0; }
         .question-text { font-size: 32px; font-weight: bold; color: var(--text-main); text-align: center; word-break: break-all; line-height: 1.45; }
+        .question-category {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 6px;
+            font-weight: normal;
+        }
         
+        .question-main {
+            font-weight: bold;
+            line-height: 1.45;
+        }
+                
         .answer-input { width: 100%; padding: 12px; font-size: 18px; border: 2px solid var(--border-color); background: var(--card-bg); color: var(--text-main); border-radius: 8px; box-sizing: border-box; text-align: center; outline: none; margin-top: auto; }
         .answer-input:focus { border-color: #007bff; }
         
@@ -559,27 +570,35 @@
             const currentQuiz = words[currentIndex];
             if(!currentQuiz) return;
             const qTextElem = document.getElementById('quizQuestion');
-            qTextElem.innerText =
-            `[${currentQuiz.category}]\n${currentQuiz.question}`;
+            qTextElem.innerHTML = `
+                <div class="question-category">
+                    ${currentQuiz.category || ""}
+                </div>
+                <div class="question-main">
+                    ${currentQuiz.question}
+                </div>
+            `;
             document.getElementById('btnAction').innerText = "확인";
             
+            const mainQuestion =
+                qTextElem.querySelector('.question-main');
+            
             if(currentQuiz.question.length > 20) {
-
-                qTextElem.style.fontSize = "18px";
+            
+                mainQuestion.style.fontSize = "18px";
             
             } else if(currentQuiz.question.length > 10) {
             
-                qTextElem.style.fontSize = "22px";
+                mainQuestion.style.fontSize = "22px";
             
             } else if(currentQuiz.question.length > 6) {
             
-                qTextElem.style.fontSize = "28px";
+                mainQuestion.style.fontSize = "28px";
             
             } else {
             
-                qTextElem.style.fontSize = "38px";
+                mainQuestion.style.fontSize = "38px";
             }
-
             const inputElem = document.getElementById('userAnswer');
             const choiceElem = document.getElementById('choiceGroup');
             console.log("타입확인:", "[" + currentQuiz.type + "]");
