@@ -559,7 +559,8 @@
             const currentQuiz = words[currentIndex];
             if(!currentQuiz) return;
             const qTextElem = document.getElementById('quizQuestion');
-            qTextElem.innerText = currentQuiz.question;
+            qTextElem.innerText =
+            `[${currentQuiz.category}]\n${currentQuiz.question}`;
             document.getElementById('btnAction').innerText = "확인";
             
             if(currentQuiz.question.length > 20) {
