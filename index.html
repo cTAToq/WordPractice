@@ -201,7 +201,7 @@
             transition: all 0.2s ease;
 
             position:relative;
-            overflow:hidden;
+            overflow:visible;
         
             display:flex;
             align-items:center;
@@ -249,51 +249,50 @@
                 background-position:300% 0%;
             }
         }
+
         .folder-header.active{
 
-                    transform: translateY(-1px);
-                
-                    background: transparent;
-                
-                    border-color: transparent;
-                
-                    color: #ffffff;
-                }
-                .folder-header.active::before{
+            transform: translateY(-1px);
         
-            content:"";
+            background: transparent;
         
-            position:absolute;
+            color:#4da3ff;
         
-            inset:-1px;
+            box-shadow:
+                0 0 0 2px #4da3ff,
+                0 0 10px rgba(77,163,255,0.35);
+        }
+        @keyframes rgbGlow{
+
+            0%{
+                box-shadow:
+                    0 0 0 2px #ff5555;
+            }
         
-            border-radius:8px;
+            20%{
+                box-shadow:
+                    0 0 0 2px #ffaa00;
+            }
         
-            padding:1px;
+            40%{
+                box-shadow:
+                    0 0 0 2px #55ff88;
+            }
         
-            background:linear-gradient(
-                90deg,
-                #ff5555,
-                #ffaa00,
-                #55ff88,
-                #55aaff,
-                #aa55ff,
-                #ff5555
-            );
+            60%{
+                box-shadow:
+                    0 0 0 2px #55aaff;
+            }
         
-            background-size:300% 100%;
+            80%{
+                box-shadow:
+                    0 0 0 2px #aa55ff;
+            }
         
-            animation:rgbBorder 4s linear infinite;
-        
-            -webkit-mask:
-                linear-gradient(#fff 0 0) content-box,
-                linear-gradient(#fff 0 0);
-        
-            -webkit-mask-composite:xor;
-        
-            mask-composite:exclude;
-        
-            pointer-events:none;
+            100%{
+                box-shadow:
+                    0 0 0 2px #ff5555;
+            }
         }
     </style>
 </head>
@@ -585,6 +584,9 @@
                 
                     const folderName =
                         (row[1] || "").trim();
+                    const displayName =
+                        (row[2] || sheetName).trim();
+                     if(!sheetName) return;
 
                     if(!folderName){
 
@@ -596,10 +598,9 @@
                         return;
                     }
                 
-                    const displayName =
-                        (row[2] || sheetName).trim();
+                    
                 
-                    if(!sheetName) return;
+                   
                 
                     if(!folders[folderName]){
                         folders[folderName] = [];
@@ -615,31 +616,7 @@
                 
                 Object.keys(folders).forEach(folderName => {
 
-                    if(normalItems.length > 0){
-
-                        checkboxGroup.innerHTML += `
-                            <div class="folder-header">
-                                📄 기타
-                            </div>
-                        `;
                     
-                        normalItems.forEach(item=>{
-                    
-                            checkboxGroup.innerHTML += `
-                                <label class="checkbox-label">
-                    
-                                    <input
-                                        type="checkbox"
-                                        class="lesson-check"
-                                        value="${item.sheetName}"
-                                        onclick="loadSelectedSheets()">
-                    
-                                    ${item.displayName}
-                    
-                                </label>
-                            `;
-                        });
-                    }
                     checkboxGroup.innerHTML += `
                         <div
                             class="folder-header ${firstFolder ? 'active' : ''}"
@@ -685,9 +662,28 @@
                             </label>
                         `;
                     });
+                    
                 
                     firstFolder = false;
                 });
+                
+                normalItems.forEach(item=>{
+
+                    checkboxGroup.innerHTML += `
+                        <label class="checkbox-label">
+                
+                            <input
+                                type="checkbox"
+                                class="lesson-check"
+                                value="${item.sheetName}"
+                                onclick="loadSelectedSheets()">
+                
+                            ${item.displayName}
+                
+                        </label>
+                    `;
+                });
+                
                 checkboxGroup.innerHTML += `
                     <label class="checkbox-label">
                         <input type="checkbox"
