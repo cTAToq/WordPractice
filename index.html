@@ -440,8 +440,7 @@
         let originalWords = [];
         let streak = 0;
         let wrongMap = {};
-        
-        folderData = folders;
+        let folderData = {};
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker
@@ -707,22 +706,7 @@
                         </div>
                     `;
                 
-                    folders[folderName].forEach(item => {
-                
-                        folderDiv.innerHTML += `
-                            <label class="checkbox-label">
-                
-                                <input
-                                    type="checkbox"
-                                    class="lesson-check"
-                                    value="${item.sheetName}"
-                                    onclick="loadSelectedSheets()">
-                
-                                ${item.displayName}
-                
-                            </label>
-                        `;
-                    });
+                    
                     
                 
                     firstFolder = false;
