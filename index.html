@@ -425,33 +425,6 @@
 
         function toggleFolder(folderName){
 
-            const allContents =
-                document.querySelectorAll(
-                    '.folder-content'
-                );
-        
-            const allHeaders =
-                document.querySelectorAll(
-                    '.folder-header'
-                );
-        
-            const allIcons =
-                document.querySelectorAll(
-                    '[id^="icon-"]'
-                );
-        
-            allContents.forEach(el=>{
-                el.classList.remove("open");
-            });
-        
-            allHeaders.forEach(el=>{
-                el.classList.remove("active");
-            });
-        
-            allIcons.forEach(el=>{
-                el.textContent = "📁";
-            });
-        
             const content =
                 document.getElementById(
                     `folder-${folderName}`
@@ -467,11 +440,44 @@
                     '.folder-header'
                 );
         
-            content.classList.add("open");
+            const isOpen =
+                content.classList.contains(
+                    'open'
+                );
         
-            header.classList.add("active");
+            document
+                .querySelectorAll(
+                    '.folder-content'
+                )
+                .forEach(el=>{
+                    el.classList.remove('open');
+                });
         
-            icon.textContent = "📂";
+            document
+                .querySelectorAll(
+                    '.folder-header'
+                )
+                .forEach(el=>{
+                    el.classList.remove('active');
+                });
+        
+            document
+                .querySelectorAll(
+                    '[id^="icon-"]'
+                )
+                .forEach(el=>{
+                    el.textContent='📁';
+                });
+        
+            if(isOpen){
+                return;
+            }
+        
+            content.classList.add('open');
+        
+            header.classList.add('active');
+        
+            icon.textContent='📂';
         }
 
         function switchTab(tab) {
