@@ -196,6 +196,45 @@
         .rank-row-1 { font-weight: bold; color: #ffd700; }
         .rank-row-2 { font-weight: bold; color: #c0c0c0; }
         .rank-row-3 { font-weight: bold; color: #cd7f32; }
+        .folder-header{
+            grid-column: 1 / -1;
+        
+            display:flex;
+            align-items:center;
+        
+            padding:10px;
+            margin-top:8px;
+        
+            border-radius:8px;
+        
+            background:var(--card-bg);
+            border:1px solid var(--border-color);
+        
+            font-weight:bold;
+            cursor:pointer;
+        
+            user-select:none;
+        }
+        
+        .folder-header:hover{
+            background:rgba(0,123,255,0.05);
+        }
+        
+        .folder-content{
+            grid-column: 1 / -1;
+        
+            display:none;
+        
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        
+            gap:12px;
+        
+            padding:8px 0 4px 0;
+        }
+        
+        .folder-content.open{
+            display:grid;
+        }
     </style>
 </head>
 <body>
@@ -325,6 +364,28 @@
                 });
         }
 
+        function toggleFolder(folderName){
+
+            const content =
+                document.getElementById(
+                    `folder-${folderName}`
+                );
+        
+            const icon =
+                document.getElementById(
+                    `icon-${folderName}`
+                );
+        
+            content.classList.toggle("open");
+        
+            if(content.classList.contains("open")){
+                icon.textContent = "📂";
+            }
+            else{
+                icon.textContent = "📁";
+            }
+        }
+
         function switchTab(tab) {
             document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -417,21 +478,90 @@
                 const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=설정`;
                 const response = await fetch(url);
                 const data = await response.text();
-                const rows = data.replace(/"/g, '').split('\n').map(row => row.trim());
-                const checkboxGroup = document.getElementById('checkboxGroup');
+                const parsed = Papa.parse(data.trim());
+                const rows = parsed.data;
+                
+                const checkboxGroup =
+                    document.getElementById('checkboxGroup');
+                
                 checkboxGroup.innerHTML = '';
-
-                let count = 0;
-                rows.slice(1).forEach(sheetName => {
-                    if (sheetName) {
-                        const checked = count === 0 ? 'checked' : '';
-                        checkboxGroup.innerHTML += `
+                
+                const folders = {};
+                
+                rows.slice(1).forEach(row => {
+                
+                    const sheetName =
+                        (row[0] || "").trim();
+                
+                    const folderName =
+                        (row[1] || "기타").trim();
+                
+                    const displayName =
+                        (row[2] || sheetName).trim();
+                
+                    if(!sheetName) return;
+                
+                    if(!folders[folderName]){
+                        folders[folderName] = [];
+                    }
+                
+                    folders[folderName].push({
+                        sheetName,
+                        displayName
+                    });
+                });
+                
+                let firstFolder = true;
+                
+                Object.keys(folders).forEach(folderName => {
+                
+                    checkboxGroup.innerHTML += `
+                        <div
+                            class="folder-header"
+                            onclick="toggleFolder('${folderName}')">
+                
+                            <span
+                                id="icon-${folderName}"
+                                style="margin-right:8px;">
+                
+                                ${firstFolder ? '📂' : '📁'}
+                
+                            </span>
+                
+                            ${folderName}
+                            (${folders[folderName].length})
+                
+                        </div>
+                
+                        <div
+                            class="folder-content ${firstFolder ? 'open' : ''}"
+                            id="folder-${folderName}">
+                        </div>
+                    `;
+                
+                    const folderDiv =
+                        document.getElementById(
+                            `folder-${folderName}`
+                        );
+                
+                    folders[folderName].forEach(item => {
+                
+                        folderDiv.innerHTML += `
                             <label class="checkbox-label">
-                                <input type="checkbox" class="lesson-check" value="${sheetName}" ${checked} onclick="loadSelectedSheets()"> ${sheetName}
+                
+                                <input
+                                    type="checkbox"
+                                    class="lesson-check"
+                                    value="${item.sheetName}"
+                                    onclick="loadSelectedSheets()">
+                
+                                ${item.displayName}
+                
                             </label>
                         `;
-                        count++;
-                    }
+                    });
+                
+                    firstFolder = false;
                 });
                 checkboxGroup.innerHTML += `
                     <label class="checkbox-label">
