@@ -268,61 +268,6 @@
         
             padding:12px;
         }
-        @keyframes rgbBorder{
-        
-            0%{
-                background-position:0% 0%;
-            }
-        
-            100%{
-                background-position:300% 0%;
-            }
-        }
-
-        .folder-header.active{
-
-            transform: translateY(-1px);
-        
-            background: transparent;
-        
-            color:#4da3ff;
-        
-            box-shadow:
-                0 0 0 2px #4da3ff,
-                0 0 10px rgba(77,163,255,0.35);
-        }
-        @keyframes rgbGlow{
-
-            0%{
-                box-shadow:
-                    0 0 0 2px #ff5555;
-            }
-        
-            20%{
-                box-shadow:
-                    0 0 0 2px #ffaa00;
-            }
-        
-            40%{
-                box-shadow:
-                    0 0 0 2px #55ff88;
-            }
-        
-            60%{
-                box-shadow:
-                    0 0 0 2px #55aaff;
-            }
-        
-            80%{
-                box-shadow:
-                    0 0 0 2px #aa55ff;
-            }
-        
-            100%{
-                box-shadow:
-                    0 0 0 2px #ff5555;
-            }
-        }
     </style>
 </head>
 <body>
@@ -444,10 +389,12 @@
         let originalWords = [];
         let streak = 0;
         let wrongMap = {};
-        let folderData = {};
-        
-        let openedFolder = null;
-        let normalItemsCache = [];
+
+        // ===== 폴더(진도 선택) 관련 상태 =====
+        let folderData = {};        // { 폴더명: [{sheetName, displayName}, ...] }  (B열에 값이 있는 항목만)
+        let noFolderItems = [];     // B열이 비어있는 항목들 - 폴더 없이 항상 하단에 표시
+        let openedFolder = null;    // 현재 열려있는 폴더 (한 번에 하나만 열림)
+        let checkedValues = new Set(); // 폴더를 닫아도 체크 상태가 유지되도록 별도로 추적
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker
@@ -457,117 +404,119 @@
                 });
         }
 
-        function toggleFolder(folderName){
+        // 체크박스 목록 영역에 이벤트를 한 번만 위임 등록.
+        // (내용이 매번 innerHTML로 다시 그려져도 부모 요소는 그대로라 안전하게 동작함)
+        function setupCheckboxGroupEvents() {
+            const checkboxGroup = document.getElementById('checkboxGroup');
+            if (!checkboxGroup || checkboxGroup.dataset.eventsBound) return;
+            checkboxGroup.dataset.eventsBound = "1";
 
-            alert("클릭");
+            checkboxGroup.addEventListener('click', function(e) {
+                const header = e.target.closest('.folder-header');
+                if (!header) return;
+                const folderName = header.dataset.folder;
+                // 같은 폴더를 다시 누르면 닫고, 다른 폴더를 누르면 그 폴더만 열림(아코디언)
+                openedFolder = (openedFolder === folderName) ? null : folderName;
+                renderFolderGrid();
+            });
 
-            console.log("toggle!", folderName);
-        
-            if(openedFolder === folderName){
-                openedFolder = null;
-            }
-            else{
-                openedFolder = folderName;
-            }
-        
-            renderFolderGrid(
-                folderData,
-                normalItemsCache
-            );
+            checkboxGroup.addEventListener('change', function(e) {
+                if (!e.target.classList || !e.target.classList.contains('lesson-check')) return;
+                const val = e.target.value;
+                if (e.target.checked) {
+                    checkedValues.add(val);
+                } else {
+                    checkedValues.delete(val);
+                }
+                loadSelectedSheets();
+            });
         }
-        function renderFolderGrid(
-            folders,
-            normalItems
-        ){
-            const checkboxGroup =
-                document.getElementById(
-                    "checkboxGroup"
-                );
-        
+
+        function renderFolderGrid() {
+            const checkboxGroup = document.getElementById("checkboxGroup");
             checkboxGroup.innerHTML = "";
-        
-            const folderNames =
-                Object.keys(folders);
-        
-            for(let i=0;i<folderNames.length;i+=2){
-        
-                const row =
-                    document.createElement("div");
-        
-                row.style.display = "grid";
-                row.style.gridTemplateColumns =
-                    "1fr 1fr";
-                row.style.gap = "12px";
-        
-                const pair =
-                    folderNames.slice(i,i+2);
-        
-                pair.forEach(folderName=>{
-        
-                    const card =
-                        document.createElement("div");
-        
-                    card.className =
-                        "folder-header";
-        
-                    if(openedFolder === folderName){
-                        card.classList.add("active");
-                    }
-        
-                    card.textContent =
-                        folderName;
-        
-                    card.onclick = ()=>{
-                        toggleFolder(folderName);
-                    };
-        
+
+            const folderNames = Object.keys(folderData);
+
+            if (folderNames.length === 0 && noFolderItems.length === 0) {
+                checkboxGroup.innerHTML = '<span style="color:#888; font-size:14px;">등록된 진도가 없습니다.</span>';
+                return;
+            }
+
+            // 폴더 헤더 2개씩 한 줄로 표시 (아코디언 - 한 번에 하나만 열림)
+            for (let i = 0; i < folderNames.length; i += 2) {
+                const row = document.createElement("div");
+                row.className = "folder-row";
+
+                const pair = folderNames.slice(i, i + 2);
+
+                pair.forEach(folderName => {
+                    const card = document.createElement("div");
+                    card.className = "folder-header" + (openedFolder === folderName ? " active" : "");
+                    card.dataset.folder = folderName;
+                    card.textContent = (openedFolder === folderName ? "▼ " : "▶ ") + folderName;
                     row.appendChild(card);
                 });
-        
+
                 checkboxGroup.appendChild(row);
-        
-                if(
-                    openedFolder &&
-                    pair.includes(openedFolder)
-                ){
-        
-                    const content =
-                        document.createElement("div");
-        
-                    content.className =
-                        "folder-content open";
-        
-                    folders[openedFolder]
-                        .forEach(item=>{
-        
+
+                if (openedFolder && pair.includes(openedFolder)) {
+                    const content = document.createElement("div");
+                    content.className = "folder-content open";
+
+                    folderData[openedFolder].forEach(item => {
+                        const isChecked = checkedValues.has(item.sheetName) ? "checked" : "";
                         content.innerHTML += `
                             <label class="checkbox-label">
                                 <input
                                     type="checkbox"
                                     class="lesson-check"
                                     value="${item.sheetName}"
-                                    onclick="loadSelectedSheets()">
-        
+                                    ${isChecked}>
+
                                 ${item.displayName}
                             </label>
                         `;
                     });
-        
-                    checkboxGroup.appendChild(
-                        content
-                    );
+
+                    checkboxGroup.appendChild(content);
                 }
             }
-        
-        
+
+            // B열(폴더명)이 비어있는 항목 - 폴더로 묶지 않고 항상 펼쳐진 상태로 하단에 표시
+            if (noFolderItems.length > 0) {
+                const plainWrap = document.createElement("div");
+                plainWrap.className = "folder-content open";
+                plainWrap.style.marginTop = "8px";
+
+                noFolderItems.forEach(item => {
+                    const isChecked = checkedValues.has(item.sheetName) ? "checked" : "";
+                    plainWrap.innerHTML += `
+                        <label class="checkbox-label">
+                            <input
+                                type="checkbox"
+                                class="lesson-check"
+                                value="${item.sheetName}"
+                                ${isChecked}>
+
+                            ${item.displayName}
+                        </label>
+                    `;
+                });
+
+                checkboxGroup.appendChild(plainWrap);
+            }
+
+            // 오답노트는 항상 맨 마지막
+            const wrongChecked = checkedValues.has("wrong-note") ? "checked" : "";
             checkboxGroup.innerHTML += `
                 <label class="checkbox-label">
                     <input
                         type="checkbox"
                         class="lesson-check"
                         value="wrong-note"
-                        onclick="loadSelectedSheets()">
-        
+                        ${wrongChecked}>
+
                     ❌ 오답노트
                 </label>
             `;
@@ -659,6 +608,7 @@
         async function initApp() {
             initTheme();
             initUser();
+            setupCheckboxGroupEvents();
             wrongMap = JSON.parse(
                 localStorage.getItem('wrongMap')
             ) || {};
@@ -668,60 +618,47 @@
                 const data = await response.text();
                 const parsed = Papa.parse(data.trim());
                 const rows = parsed.data;
-                
-                const checkboxGroup =
-                    document.getElementById('checkboxGroup');
-                
-                checkboxGroup.innerHTML = '';
-                
-            const folders = {};
-            folderData = folders;
 
-            folders["기본"] = [];
-            
-            const normalItems = [];
-            normalItemsCache = normalItems;
-                
+                const folders = {};
+                const noFolder = [];
+
                 rows.slice(1).forEach(row => {
-                
+
                     const sheetName =
                         (row[0] || "").trim();
-                
+
                     const folderName =
                         (row[1] || "").trim();
                     const displayName =
                         (row[2] || sheetName).trim();
-                     if(!sheetName) return;
+                    if(!sheetName) return;
 
                     if(!folderName){
-
-                        folders["기본"].push({
+                        // B열이 비어있으면 폴더 없이 항상 하단에 체크박스로 표시
+                        noFolder.push({
                             sheetName,
                             displayName
                         });
-                    
+
                         return;
                     }
-                
-                    
-                
-                   
-                
+
                     if(!folders[folderName]){
                         folders[folderName] = [];
                     }
-                
+
                     folders[folderName].push({
                         sheetName,
                         displayName
                     });
                 });
-                
-                renderFolderGrid(
-                    folders,
-                    normalItems
-                );
-                
+
+                folderData = folders;
+                noFolderItems = noFolder;
+                openedFolder = null;
+
+                renderFolderGrid();
+
                 loadSelectedSheets();
             } 
             catch (e) {
@@ -733,18 +670,16 @@
         }
 
         async function loadSelectedSheets() {
-            const checkboxes = document.querySelectorAll('.lesson-check');
-            const wrongMode =
-                document.querySelector(
-                    '.lesson-check[value="wrong-note"]'
-                )?.checked;
+            // 폴더가 닫혀있어 체크박스가 화면(DOM)에 없어도 선택 상태는
+            // checkedValues에 계속 남아있으므로 이를 기준으로 불러온다.
+            const wrongMode = checkedValues.has("wrong-note");
             let fetchPromises = [];
             currentIndex = 0;
             resetCardUI();
 
-            checkboxes.forEach(cb => {
-                if (cb.checked && cb.value !== "wrong-note") {
-                    const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(cb.value)}`;
+            checkedValues.forEach(val => {
+                if (val !== "wrong-note") {
+                    const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(val)}`;
                     fetchPromises.push(fetchSheetData(url));
                 }
             });
@@ -981,9 +916,7 @@
                         wrongMap[currentQuiz.question] = 0;
                     }
                     if(
-                        document.querySelector(
-                            '.lesson-check[value="wrong-note"]'
-                        )?.checked
+                        checkedValues.has("wrong-note")
                     ) {
                     
                         words = words.filter(word =>
