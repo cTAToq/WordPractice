@@ -573,8 +573,12 @@
                     </label>
                 `;
                 if(count > 0) loadSelectedSheets();
-            } catch (e) {
-                document.getElementById('checkboxGroup').innerHTML = '<span style="color:red;">목록 로드 실패</span>';
+            } 
+            catch (e) {
+                console.error(e);
+            
+                document.getElementById('checkboxGroup').innerHTML =
+                    '<span style="color:red;">목록 로드 실패</span>';
             }
         }
 
