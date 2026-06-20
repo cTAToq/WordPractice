@@ -239,6 +239,30 @@
         .folder-content.open{
             display:grid;
         }
+        #folderViewer{
+
+            width:100%;
+        
+            margin-top:12px;
+        
+            display:grid;
+        
+            grid-template-columns:
+                repeat(2,minmax(0,1fr));
+        
+            gap:12px;
+        }
+        
+        .viewer-empty{
+        
+            grid-column:1/-1;
+        
+            text-align:center;
+        
+            color:#888;
+        
+            padding:12px;
+        }
         @keyframes rgbBorder{
         
             0%{
@@ -311,6 +335,8 @@
             <div class="checkbox-group" id="checkboxGroup">
                 <span style="color:#888; font-size:14px;">진도 목록 불러오는 중...</span>
             </div>
+            
+            <div id="folderViewer"></div>
         </div>
 
         <div class="card-wrapper">
@@ -414,6 +440,8 @@
         let originalWords = [];
         let streak = 0;
         let wrongMap = {};
+        let folderData = {};
+        folderData = folders;
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker
@@ -470,14 +498,49 @@
                 });
         
             if(isOpen){
+                document
+                    .getElementById(
+                        'folderViewer'
+                    ).innerHTML = '';
                 return;
             }
+            renderFolder(folderName);
         
             content.classList.add('open');
         
             header.classList.add('active');
         
             icon.textContent='📂';
+        }
+
+        function renderFolder(folderName){
+
+            const viewer =
+                document.getElementById(
+                    'folderViewer'
+                );
+        
+            viewer.innerHTML = '';
+        
+            const items =
+                folderData[folderName] || [];
+        
+            items.forEach(item=>{
+        
+                viewer.innerHTML += `
+                    <label class="checkbox-label">
+        
+                        <input
+                            type="checkbox"
+                            class="lesson-check"
+                            value="${item.sheetName}"
+                            onclick="loadSelectedSheets()">
+        
+                        ${item.displayName}
+        
+                    </label>
+                `;
+            });
         }
 
         function switchTab(tab) {
@@ -627,30 +690,20 @@
                         <div
                             class="folder-header ${firstFolder ? 'active' : ''}"
                             onclick="toggleFolder('${folderName}')">
-                
+                    
                             <span
                                 id="icon-${folderName}"
                                 style="margin-right:8px;">
-                
+                    
                                 ${firstFolder ? '📂' : '📁'}
-                
+                    
                             </span>
-                
+                    
                             ${folderName}
                             (${folders[folderName].length})
-                
-                        </div>
-                
-                        <div
-                            class="folder-content ${firstFolder ? 'open' : ''}"
-                            id="folder-${folderName}">
+                    
                         </div>
                     `;
-                
-                    const folderDiv =
-                        document.getElementById(
-                            `folder-${folderName}`
-                        );
                 
                     folders[folderName].forEach(item => {
                 
@@ -699,6 +752,15 @@
                         ❌ 오답노트
                     </label>
                 `;
+                const firstFolderName =
+                    Object.keys(folders)[0];
+                
+                if(firstFolderName){
+                
+                    renderFolder(
+                        firstFolderName
+                    );
+                }
                 loadSelectedSheets();
             } 
             catch (e) {
