@@ -239,6 +239,11 @@
         .folder-content.open{
             display:grid;
         }
+        .folder-row{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:12px;
+        }
         #folderViewer{
 
             width:100%;
@@ -336,8 +341,6 @@
                 <span style="color:#888; font-size:14px;">진도 목록 불러오는 중...</span>
             </div>
             
-            <div id="folderViewer"></div>
-        </div>
 
         <div class="card-wrapper">
             <div class="card-inner" id="cardInner">
@@ -441,6 +444,9 @@
         let streak = 0;
         let wrongMap = {};
         let folderData = {};
+        
+        let openedFolder = null;
+        let normalItemsCache = [];
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker
@@ -452,71 +458,106 @@
 
         function toggleFolder(folderName){
 
-            const icon =
-                document.getElementById(
-                    `icon-${folderName}`
-                );
-        
-            const header =
-                icon.closest(
-                    '.folder-header'
-                );
-        
-            const isOpen =
-                header.classList.contains(
-                    'active'
-                );
-        
-            document
-                .querySelectorAll(
-                    '.folder-header'
-                )
-                .forEach(el=>{
-                    el.classList.remove('active');
-                });
-        
-            document
-                .querySelectorAll(
-                    '[id^="icon-"]'
-                )
-                .forEach(el=>{
-                    el.textContent='📁';
-                });
-        
-            if(isOpen){
-        
-                document
-                    .getElementById(
-                        'folderViewer'
-                    ).innerHTML = '';
-        
-                return;
+            if(openedFolder === folderName){
+                openedFolder = null;
+            }
+            else{
+                openedFolder = folderName;
             }
         
-            renderFolder(folderName);
-        
-            header.classList.add('active');
-        
-            icon.textContent='📂';
+            renderFolderGrid(
+                folderData,
+                normalItemsCache
+            );
         }
-
-        function renderFolder(folderName){
-
-            const viewer =
+        function renderFolderGrid(
+            folders,
+            normalItems
+        ){
+            const checkboxGroup =
                 document.getElementById(
-                    'folderViewer'
+                    "checkboxGroup"
                 );
         
-            viewer.innerHTML = '';
+            checkboxGroup.innerHTML = "";
         
-            const items =
-                folderData[folderName] || [];
+            const folderNames =
+                Object.keys(folders);
         
-            items.forEach(item=>{
+            for(let i=0;i<folderNames.length;i+=2){
         
-                viewer.innerHTML += `
+                const row =
+                    document.createElement("div");
+        
+                row.style.display = "grid";
+                row.style.gridTemplateColumns =
+                    "1fr 1fr";
+                row.style.gap = "12px";
+        
+                const pair =
+                    folderNames.slice(i,i+2);
+        
+                pair.forEach(folderName=>{
+        
+                    const card =
+                        document.createElement("div");
+        
+                    card.className =
+                        "folder-header";
+        
+                    if(openedFolder === folderName){
+                        card.classList.add("active");
+                    }
+        
+                    card.textContent =
+                        folderName;
+        
+                    card.onclick = ()=>{
+                        toggleFolder(folderName);
+                    };
+        
+                    row.appendChild(card);
+                });
+        
+                checkboxGroup.appendChild(row);
+        
+                if(
+                    openedFolder &&
+                    pair.includes(openedFolder)
+                ){
+        
+                    const content =
+                        document.createElement("div");
+        
+                    content.className =
+                        "folder-content open";
+        
+                    folders[openedFolder]
+                        .forEach(item=>{
+        
+                        content.innerHTML += `
+                            <label class="checkbox-label">
+                                <input
+                                    type="checkbox"
+                                    class="lesson-check"
+                                    value="${item.sheetName}"
+                                    onclick="loadSelectedSheets()">
+        
+                                ${item.displayName}
+                            </label>
+                        `;
+                    });
+        
+                    checkboxGroup.appendChild(
+                        content
+                    );
+                }
+            }
+        
+            normalItems.forEach(item=>{
+        
+                checkboxGroup.innerHTML += `
                     <label class="checkbox-label">
-        
                         <input
                             type="checkbox"
                             class="lesson-check"
@@ -524,11 +565,23 @@
                             onclick="loadSelectedSheets()">
         
                         ${item.displayName}
-        
                     </label>
                 `;
             });
+        
+            checkboxGroup.innerHTML += `
+                <label class="checkbox-label">
+                    <input
+                        type="checkbox"
+                        class="lesson-check"
+                        value="wrong-note"
+                        onclick="loadSelectedSheets()">
+        
+                    ❌ 오답노트
+                </label>
+            `;
         }
+
 
         function switchTab(tab) {
             document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
@@ -630,10 +683,11 @@
                 
                 checkboxGroup.innerHTML = '';
                 
-                const folders = {};
-                folderData = folders;
-                const normalItems = [];
-                
+            const folders = {};
+            folderData = folders;
+            
+            const normalItems = [];
+            normalItemsCache = normalItems;
                 
                 rows.slice(1).forEach(row => {
                 
@@ -670,71 +724,11 @@
                     });
                 });
                 
-                let firstFolder = true;
+                renderFolderGrid(
+                    folders,
+                    normalItems
+                );
                 
-                Object.keys(folders).forEach(folderName => {
-
-                    
-                    checkboxGroup.innerHTML += `
-                        <div
-                            class="folder-header ${firstFolder ? 'active' : ''}"
-                            onclick="toggleFolder('${folderName}')">
-                    
-                            <span
-                                id="icon-${folderName}"
-                                style="margin-right:8px;">
-                    
-                                ${firstFolder ? '📂' : '📁'}
-                    
-                            </span>
-                    
-                            ${folderName}
-                            (${folders[folderName].length})
-                    
-                        </div>
-                    `;
-                
-                    
-                    
-                
-                    firstFolder = false;
-                });
-                
-                normalItems.forEach(item=>{
-
-                    checkboxGroup.innerHTML += `
-                        <label class="checkbox-label">
-                
-                            <input
-                                type="checkbox"
-                                class="lesson-check"
-                                value="${item.sheetName}"
-                                onclick="loadSelectedSheets()">
-                
-                            ${item.displayName}
-                
-                        </label>
-                    `;
-                });
-                
-                checkboxGroup.innerHTML += `
-                    <label class="checkbox-label">
-                        <input type="checkbox"
-                            class="lesson-check"
-                            value="wrong-note"
-                            onclick="loadSelectedSheets()">
-                        ❌ 오답노트
-                    </label>
-                `;
-                const firstFolderName =
-                    Object.keys(folders)[0];
-                
-                if(firstFolderName){
-                
-                    renderFolder(
-                        firstFolderName
-                    );
-                }
                 loadSelectedSheets();
             } 
             catch (e) {
