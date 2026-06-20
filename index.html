@@ -452,11 +452,6 @@
 
         function toggleFolder(folderName){
 
-            const content =
-                document.getElementById(
-                    `folder-${folderName}`
-                );
-        
             const icon =
                 document.getElementById(
                     `icon-${folderName}`
@@ -468,17 +463,9 @@
                 );
         
             const isOpen =
-                content.classList.contains(
-                    'open'
+                header.classList.contains(
+                    'active'
                 );
-        
-            document
-                .querySelectorAll(
-                    '.folder-content'
-                )
-                .forEach(el=>{
-                    el.classList.remove('open');
-                });
         
             document
                 .querySelectorAll(
@@ -497,15 +484,16 @@
                 });
         
             if(isOpen){
+        
                 document
                     .getElementById(
                         'folderViewer'
                     ).innerHTML = '';
+        
                 return;
             }
-            renderFolder(folderName);
         
-            content.classList.add('open');
+            renderFolder(folderName);
         
             header.classList.add('active');
         
