@@ -440,7 +440,7 @@
         let originalWords = [];
         let streak = 0;
         let wrongMap = {};
-        let folderData = {};
+        
         folderData = folders;
 
         if ('serviceWorker' in navigator) {
@@ -644,7 +644,9 @@
                 checkboxGroup.innerHTML = '';
                 
                 const folders = {};
+                folderData = folders;
                 const normalItems = [];
+                
                 
                 rows.slice(1).forEach(row => {
                 
