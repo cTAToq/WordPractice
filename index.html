@@ -198,6 +198,7 @@
         .rank-row-3 { font-weight: bold; color: #cd7f32; }
         .folder-header{
             grid-column: 1 / -1;
+            transition: all 0.2s ease;
         
             display:flex;
             align-items:center;
@@ -234,6 +235,19 @@
         
         .folder-content.open{
             display:grid;
+        }
+        .folder-header.active{
+
+            transform: translateY(-1px);
+        
+            background: rgba(0,123,255,0.15);
+        
+            border-color: #4da3ff;
+        
+            box-shadow:
+                0 0 0 1px rgba(77,163,255,0.3);
+        
+            color: #4da3ff;
         }
     </style>
 </head>
@@ -366,6 +380,33 @@
 
         function toggleFolder(folderName){
 
+            const allContents =
+                document.querySelectorAll(
+                    '.folder-content'
+                );
+        
+            const allHeaders =
+                document.querySelectorAll(
+                    '.folder-header'
+                );
+        
+            const allIcons =
+                document.querySelectorAll(
+                    '[id^="icon-"]'
+                );
+        
+            allContents.forEach(el=>{
+                el.classList.remove("open");
+            });
+        
+            allHeaders.forEach(el=>{
+                el.classList.remove("active");
+            });
+        
+            allIcons.forEach(el=>{
+                el.textContent = "📁";
+            });
+        
             const content =
                 document.getElementById(
                     `folder-${folderName}`
@@ -376,14 +417,16 @@
                     `icon-${folderName}`
                 );
         
-            content.classList.toggle("open");
+            const header =
+                icon.closest(
+                    '.folder-header'
+                );
         
-            if(content.classList.contains("open")){
-                icon.textContent = "📂";
-            }
-            else{
-                icon.textContent = "📁";
-            }
+            content.classList.add("open");
+        
+            header.classList.add("active");
+        
+            icon.textContent = "📂";
         }
 
         function switchTab(tab) {
@@ -494,7 +537,11 @@
                         (row[0] || "").trim();
                 
                     const folderName =
-                        (row[1] || "기타").trim();
+                        (row[1] || "").trim();
+
+                    if(!folderName){
+                        return;
+                    }
                 
                     const displayName =
                         (row[2] || sheetName).trim();
@@ -517,7 +564,7 @@
                 
                     checkboxGroup.innerHTML += `
                         <div
-                            class="folder-header"
+                            class="folder-header ${firstFolder ? 'active' : ''}"
                             onclick="toggleFolder('${folderName}')">
                 
                             <span
