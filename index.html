@@ -554,20 +554,6 @@
                 }
             }
         
-            normalItems.forEach(item=>{
-        
-                checkboxGroup.innerHTML += `
-                    <label class="checkbox-label">
-                        <input
-                            type="checkbox"
-                            class="lesson-check"
-                            value="${item.sheetName}"
-                            onclick="loadSelectedSheets()">
-        
-                        ${item.displayName}
-                    </label>
-                `;
-            });
         
             checkboxGroup.innerHTML += `
                 <label class="checkbox-label">
@@ -685,6 +671,8 @@
                 
             const folders = {};
             folderData = folders;
+
+            folders["기본"] = [];
             
             const normalItems = [];
             normalItemsCache = normalItems;
@@ -702,7 +690,7 @@
 
                     if(!folderName){
 
-                        normalItems.push({
+                        folders["기본"].push({
                             sheetName,
                             displayName
                         });
